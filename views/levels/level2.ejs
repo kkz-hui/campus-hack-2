@@ -25,14 +25,16 @@
       <div style="font-size:16px;font-weight:700;color:#c0c0c5">校務資訊系統 — 登入頁</div>
     </div>
 
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <div style="display:flex; gap:8px; flex-direction: column;">
+      <div style="display: flex; gap: 8px; align-items: center;">
       <span style="font-size:12px;color:var(--text-dim)">&nbsp;&nbsp;請輸入使用者帳號： </span>
       <input type="text" id="ans" class="inp"
         style="max-width:220px" placeholder="" autocomplete="off">
       <button class="btn btn-s btn-xs" onclick="verify()">
-         確認 </button><br>
+         確認</button>
+      </div>
       <% if (!hintUsed) { %>
-      <button class="btn btn-a btn-xs" onclick="useHint()" id="hint-btn">
+      <button class="btn btn-a btn-xs" onclick="useHint()" id="hint-btn" style="width: fit-content;">
          需要提示 (-70pt) 
       </button>
       <% } %>
