@@ -1,0 +1,105 @@
+<%- include('partials/header', { pageTitle: '首頁' }) %>
+
+<div class="wrap">
+
+  <!-- 標題區 -->
+  <div style="text-align:center;padding:48px 0 32px;" class="fi">
+    <div style="font-size:32px;font-weight:700;color:var(--green);letter-spacing:5px;
+      text-shadow:0 0 24px rgba(74,246,38,.3)">
+      CAMPUS<span style="color:var(--red)">_HACK</span>
+    </div>
+    <div style="font-size:12px;color:var(--text-dim);letter-spacing:3px;margin-top:6px">
+      模擬資安訓練平台
+    </div>
+
+    <!-- 故事背景 -->
+    <div style="max-width:580px;margin:24px auto 0;text-align:left;font-size:13px;
+      line-height:1.9;padding:16px 20px;border-left:3px solid var(--green);
+      background:rgba(74,246,38,.03);">
+      <span style="color:var(--amber);font-weight:700">[ MISSION BRIEF ]</span><br><br>
+      有人試圖入侵學校系統。資安團隊攔截到一封可疑信件，
+      並從中發現了一連串攻擊線索。<br><br>
+      你的任務是：從釣魚信件開始追查，
+      逐步還原攻擊者的完整入侵路徑，蒐集所有 FLAG 碎片，揪出入侵者。<br><br>
+      <span style="color:var(--text-dim);font-size:12px">
+        ⚠ 這是真實環境模擬。
+        善用瀏覽器開發者工具（<kbd style="background:#222;padding:1px 5px;border-radius:2px">F12</kbd>）。
+      </span>
+    </div>
+  </div>
+
+  <!-- 終端機風格提示 -->
+  <div class="term fi" style="margin-bottom:20px">
+    <div class="term-bar">
+      <span class="dot dot-r"></span>
+      <span class="dot dot-y"></span>
+      <span class="dot dot-g"></span>
+      <span style="margin-left:8px">terminal — campus-hack</span>
+      <span style="margin-left:auto" class="t-a">score: <%= progress.total %> pt</span>
+    </div>
+    <div class="term-body">
+      <div class="t-d">$ ls -la levels/</div>
+      <div class="t-d" style="margin-top:4px">total 2</div>
+      <%
+        const LEVELS = [
+          { id:1, name:'詐騙辨識',    tech:'Email Analysis',    max:100 },
+          { id:2, name:'Base64 解碼', tech:'Source Code Review',max:150 },
+        ];
+        LEVELS.forEach(lv => {
+          const done     = progress.completed.includes(lv.id);
+          const unlocked = lv.id === 1 || progress.completed.includes(lv.id - 1) || done;
+          const sc       = progress.scores[lv.id];
+      %>
+      <div style="margin-top:2px">
+        <span class="<%= done ? 't-g' : (unlocked ? 't-d' : 't-d') %>">
+          <%= done ? 'drwxr-xr-x' : (unlocked ? 'drwxr-xr-x' : 'drwx------') %>
+        </span>
+        &nbsp;
+        <span class="<%= done ? 't-g' : (unlocked ? '' : 't-d') %>">
+          level-<%= lv.id %>/
+        </span>
+        &nbsp;
+        <span class="t-d" style="font-size:11px">
+          <%= lv.name %> · <%= lv.tech %> · max <%= lv.max %>pt
+          <%= done ? '  ✓ ' + sc + 'pt' : '' %>
+          <%= !unlocked ? '  [LOCKED]' : '' %>
+        </span>
+      </div>
+      <% }) %>
+      <div style="margin-top:8px">
+        <span class="t-g">$</span> <span class="cursor"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 關卡卡片 -->
+  <div class="lv-grid fi">
+    <%
+      LEVELS.forEach(lv => {
+        const done     = progress.completed.includes(lv.id);
+        const unlocked = lv.id === 1 || progress.completed.includes(lv.id - 1) || done;
+        const sc       = progress.scores[lv.id];
+    %>
+    <a href="/level/<%= lv.id %>"
+       class="lv-card <%= done ? 'done' : '' %> <%= !unlocked ? 'locked' : '' %>">
+      <div class="lv-num">LV <%= String(lv.id).padStart(2,'0') %> &nbsp;<%= done ? '✓' : (unlocked ? '▶ OPEN' : '🔒 LOCKED') %></div>
+      <div class="lv-name"><%= lv.name %></div>
+      <div class="lv-tech"><%= lv.tech %></div>
+      <% if (done) { %>
+        <div class="lv-sc">得分：<%= sc %> / <%= lv.max %> pt</div>
+      <% } else { %>
+        <div class="lv-sc" style="color:var(--text-dim)">滿分 <%= lv.max %> pt</div>
+      <% } %>
+    </a>
+    <% }) %>
+  </div>
+
+  <!-- F12 提示 -->
+  <div class="alert alert-a" style="margin-top:28px">
+    💡 本平台為真實環境模擬。每一關的關鍵資訊都藏在真實的 HTML 原始碼、Cookie、
+    HTTP 回應中，請善用 <strong>F12 開發者工具</strong> 來找線索。
+  </div>
+
+</div>
+
+<%- include('partials/footer') %>

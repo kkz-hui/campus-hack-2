@@ -1,0 +1,43 @@
+<%- include('../partials/header', { pageTitle: 'Lv2 解碼成功' }) %>
+
+<div class="wrap">
+  <div class="pg-header fi">
+    <div class="pg-lv">LV 02 / 02 &nbsp;·&nbsp; 完成</div>
+    <div class="pg-title">Base64 解碼 — 成功</div>
+  </div>
+
+  <div class="term fi" style="margin-bottom:20px">
+    <div class="term-bar">
+      <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+      <span style="margin-left:8px">result</span>
+    </div>
+    <div class="term-body">
+      <div class="t-d">$ cat result.txt</div>
+      <div style="margin-top:8px">
+        <div class="t-g">✓ 解碼成功</div>
+        <div style="margin-top:6px">
+          學號：<span class="t-a">s1234567</span><br>
+          對應學生：<span class="t-a">王小明</span><br>
+          系所：資訊工程系 3年級<br>
+          生日：<span class="t-a">20030415</span>
+          <span class="t-d" style="font-size:11px">← 記住這個，下一關要用</span>
+        </div>
+        <div style="margin-top:10px" class="t-a">
+          本關得分：<strong><%= score %> pt</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-g fi">
+    ✓ 第2關完成！你已取得學號 <strong>s1234567</strong>。<br>
+    結合第1關的學生資料，你現在知道密碼來源了。
+  </div>
+
+  <div style="margin-top:16px" class="fi">
+    <a href="/" class="btn btn-d" style="margin-right:10px">← 返回選單</a>
+    <span style="font-size:12px;color:var(--text-dim)">（更多關卡建置中）</span>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

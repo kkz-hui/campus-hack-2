@@ -1,0 +1,129 @@
+<%- include('../partials/header', { pageTitle: 'Lv2 Base64 解碼' }) %>
+
+<!--czEyMzQ1Njc=-->
+
+<div class="wrap">
+
+  <!-- 頁面標題 -->
+  <div class="pg-header fi">
+    <div class="pg-lv">LV 02 / 02 &nbsp;·&nbsp; Base64 解碼</div>
+    <div class="pg-title">Source Code Review</div>
+    <div class="pg-sub">滿分 150 pt &nbsp;·&nbsp; 每答錯 -15 &nbsp;·&nbsp; 使用提示 -70 &nbsp;·&nbsp; 最低 0</div>
+  </div>
+
+
+  <!-- 模擬「你進入的那個假校務系統」 -->
+  <div class="term fi" style="margin-bottom:18px">
+    <div class="term-bar">
+      <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+      <span style="margin-left:8px;color:var(--red)">🔓</span>
+      <span style="margin-left:4px">http://campus-verify.sch00l-p0rtal.xyz/login</span>
+    </div>
+    <!-- 偽造校務系統登入頁外觀 -->
+    <div style="padding:36px;background:#000000;color:#333;text-align:center">
+      <div style="font-size:30px;margin-bottom:8px">🏫</div>
+      <div style="font-size:16px;font-weight:700;color:#c0c0c5">校務資訊系統 — 登入頁</div>
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:12px;color:var(--text-dim)">&nbsp;&nbsp;請輸入使用者帳號： </span>
+      <input type="text" id="ans" class="inp"
+        style="max-width:220px" placeholder="" autocomplete="off">
+      <button class="btn btn-s btn-xs" onclick="verify()">
+         確認 </button>
+      <% if (!hintUsed) { %>
+      <button class="btn btn-a btn-xs" onclick="useHint()" id="hint-btn">
+         需要提示 (-70pt) 
+      </button>
+      <% } %>
+    </div>
+
+    <div id="err-msg" style="display:none;margin-top:10px"></div>
+
+    <!-- 提示內容（初始隱藏，點按鈕後才顯示） -->
+    <div id="hint-box" style="display:<%= hintUsed ? 'block' : 'none' %>;margin-top:12px">
+      <div class="alert alert-b">
+        💡 提示：在原始碼中找字串。
+      </div>
+    </div>
+
+    <!-- 得分預覽 -->
+    <div class="score-row" style="margin-top:10px">
+      預計得分：<span class="sc-cur" id="sc"><%= score %></span>
+      / <span class="sc-max">150</span> pt
+      <% if (wrong > 0) { %>
+        &nbsp;·&nbsp; 答錯 <%= wrong %> 次（-15/次）
+      <% } %>
+      <% if (hintUsed) { %>
+        &nbsp;·&nbsp; <span style="color:var(--red)">已使用提示（-70）</span>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- 過關區（初始隱藏） -->
+  <div id="pass-area" style="display:none" class="fi">
+    <div class="alert alert-g" style="background:#000000;color:#ffe9e9;">
+      ✓ 歡迎！<br>
+        &nbsp;&nbsp;學生 王小明
+    </div>
+    <a href="/level/2/success" class="btn btn-s">[ 進入結果頁 ] →</a>
+  </div>
+
+  <div class="pg-nav">
+    <a href="/" class="btn btn-d">← 返回選單</a>
+  </div>
+</div>
+
+<script>
+let wrong    = <%= wrong %>;
+let hintUsed = <%= hintUsed ? 'true' : 'false' %>;
+
+function calcScore() {
+  return Math.max(0, 150 - wrong * 15 - (hintUsed ? 70 : 0));
+}
+
+function useHint() {
+  fetch('/level/2/hint', { method: 'POST' })
+  .then(r => r.json())
+  .then(d => {
+    hintUsed = true;
+    document.getElementById('hint-box').style.display = 'block';
+    document.getElementById('sc').textContent = d.score;
+    const btn = document.getElementById('hint-btn');
+    if (btn) btn.style.display = 'none';
+  });
+}
+
+function verify() {
+  const answer = document.getElementById('ans').value;
+  fetch('/level/2/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ answer }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.correct) {
+      document.getElementById('pass-area').style.display = 'block';
+      document.getElementById('err-msg').style.display   = 'none';
+    } else {
+      wrong = d.wrong;
+      document.getElementById('sc').textContent = d.score;
+      const err = document.getElementById('err-msg');
+      err.style.display = 'block';
+      err.innerHTML = `<div class="alert alert-r">
+        ✗ ${d.errMsg}
+        <div style="margin-top:4px;font-size:11px;color:var(--amber)">
+          ⭐ 目前預計得分：${d.score} pt
+        </div>
+      </div>`;
+    }
+  });
+}
+
+document.getElementById('ans').addEventListener('keydown', e => {
+  if (e.key === 'Enter') verify();
+});
+</script>
+
+<%- include('../partials/footer') %>

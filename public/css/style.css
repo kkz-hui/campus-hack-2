@@ -1,0 +1,223 @@
+/* ============================================================
+   CAMPUS HACK — 全域樣式
+   風格：OverTheWire / Wargame 駭客訓練基地
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --green:     #4af626;
+  --green-dim: #2ea614;
+  --red:       #ff3355;
+  --amber:     #ffaa00;
+  --blue:      #4fc3f7;
+  --bg:        #0c0c0c;
+  --bg2:       #111;
+  --panel:     #161616;
+  --border:    #2a2a2a;
+  --text:      #cccccc;
+  --text-dim:  #555;
+  --font:      'Fira Code', 'Courier New', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.7;
+  /* 細微掃描線 */
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,.07) 3px,
+    rgba(0,0,0,.07) 4px
+  );
+}
+
+/* ── 頂部導覽列 ── */
+.topbar {
+  background: #000;
+  border-bottom: 1px solid var(--green-dim);
+  padding: 0 24px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-brand {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 3px;
+  text-decoration: none;
+}
+.topbar-brand em { color: var(--red); font-style: normal; }
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.topbar-score { color: var(--amber); }
+
+/* ── 레이아웃 ── */
+.wrap { max-width: 860px; margin: 0 auto; padding: 36px 20px; }
+.wrap-wide { max-width: 1080px; margin: 0 auto; padding: 36px 20px; }
+
+/* ── 頁面標題 ── */
+.pg-header { margin-bottom: 26px; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
+.pg-lv     { font-size: 11px; color: var(--text-dim); letter-spacing: 3px; margin-bottom: 4px; }
+.pg-title  { font-size: 22px; font-weight: 700; color: var(--green); letter-spacing: 1px; }
+.pg-sub    { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+/* ── 終端機區塊 ── */
+.term {
+  background: #080808;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  font-size: 13px;
+}
+.term-bar {
+  background: var(--panel);
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--text-dim);
+  user-select: none;
+}
+.term-body { padding: 14px 18px; line-height: 2; }
+.t-g  { color: var(--green); }        /* prompt / success */
+.t-r  { color: var(--red); }          /* error */
+.t-a  { color: var(--amber); }        /* warning / flag */
+.t-b  { color: var(--blue); }         /* info */
+.t-d  { color: var(--text-dim); }     /* dim output */
+.cursor { display: inline-block; width: 8px; height: 14px; background: var(--green); vertical-align: middle; animation: blink 1s step-end infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── 提示框 ── */
+.alert { padding: 11px 15px; border-radius: 3px; font-size: 13px; line-height: 1.8; margin-bottom: 16px; }
+.alert-a { background: rgba(255,170,0,.08); border: 1px solid rgba(255,170,0,.3); color: var(--amber); }
+.alert-g { background: rgba(74,246,38,.07); border: 1px solid rgba(74,246,38,.3); color: var(--green); }
+.alert-r { background: rgba(255,51,85,.08); border: 1px solid rgba(255,51,85,.3);  color: var(--red); }
+.alert-b { background: rgba(79,195,247,.07); border: 1px solid rgba(79,195,247,.25); color: var(--blue); }
+
+/* ── 按鈕 ── */
+.btn {
+  background: transparent;
+  border: 1px solid var(--green);
+  color: var(--green);
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 7px 18px;
+  letter-spacing: 1px;
+  transition: all .15s;
+  text-decoration: none;
+  display: inline-block;
+}
+.btn:hover { background: var(--green); color: #000; }
+.btn-s  { background: var(--green); color: #000; font-weight: 700; }
+.btn-s:hover { background: var(--green-dim); }
+.btn-r  { border-color: var(--red); color: var(--red); }
+.btn-r:hover { background: var(--red); color: #fff; }
+.btn-a  { border-color: var(--amber); color: var(--amber); }
+.btn-a:hover { background: var(--amber); color: #000; }
+.btn-d  { border-color: var(--border); color: var(--text-dim); }
+.btn:disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
+.btn-xs {font-size: 11px; padding: 3px 8px; }
+
+/* ── 輸入框 ── */
+.inp {
+  background: #080808;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  padding: 7px 12px;
+  outline: none;
+  transition: border-color .15s;
+}
+.inp:focus { border-color: var(--green); }
+.inp::placeholder { color: var(--text-dim); }
+.inp-wide { width: 100%; }
+
+/* ── 首頁關卡卡片 ── */
+.lv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+  margin-top: 22px;
+}
+.lv-card {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 14px;
+  text-decoration: none;
+  background: rgba(255,255,255,.02);
+  transition: all .15s;
+  display: block;
+}
+.lv-card:hover { border-color: var(--green); background: rgba(74,246,38,.04); }
+.lv-card.locked { opacity: .3; pointer-events: none; }
+.lv-card.done   { border-color: var(--green-dim); }
+.lv-num  { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 4px; }
+.lv-name { font-size: 14px; color: var(--text); font-weight: 600; margin-bottom: 3px; }
+.lv-tech { font-size: 10px; color: var(--text-dim); }
+.lv-sc   { font-size: 11px; color: var(--amber); margin-top: 6px; }
+
+/* ── 郵件介面（第1關）── */
+.mail-wrap {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  min-height: 400px;
+  background: #0a0a0a;
+}
+.mail-sb { background: #0a0a0a; border-right: 1px solid var(--border); padding: 8px 0; }
+.mail-sb-title { padding: 4px 14px 10px; font-size: 10px; color: var(--text-dim); letter-spacing: 2px; }
+.mail-item { padding: 11px 14px; border-left: 3px solid transparent; cursor: pointer; }
+.mail-item.active { background: rgba(74,246,38,.06); border-left-color: var(--green); }
+.mail-from    { font-size: 12px; color: var(--green); font-weight: 600; word-break: break-all; }
+.mail-subject { font-size: 11px; color: var(--text); margin-top: 2px; }
+.mail-time    { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+.mail-body-wrap { padding: 18px; overflow: auto; }
+.mail-hd { padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.mail-title { font-size: 15px; font-weight: 700; margin-bottom: 7px; }
+.mail-meta  { font-size: 11px; color: var(--text-dim); line-height: 1.9; }
+.mail-meta .susp { color: var(--red); }
+.mail-text  { font-size: 13px; line-height: 2; }
+.mail-link  { color: var(--blue); text-decoration: underline; cursor: pointer; font-size: 12px; word-break: break-all; }
+
+/* ── 得分列 ── */
+.score-row { font-size: 11px; color: var(--text-dim); margin-top: 8px; }
+.sc-cur { color: var(--amber); font-weight: 600; }
+.sc-max { color: var(--green); }
+
+/* ── 動畫 ── */
+@keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+.fi { animation: fadeIn .3s ease both; }
+
+/* ── 底部導覽 ── */
+.pg-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--border); }
+
+/* ── RWD ── */
+@media (max-width: 600px) {
+  .mail-wrap { grid-template-columns: 1fr; }
+  .mail-sb { border-right: none; border-bottom: 1px solid var(--border); }
+}

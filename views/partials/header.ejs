@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof pageTitle !== 'undefined' ? pageTitle + ' | ' : '' %>Campus Hack</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<nav class="topbar">
+  <a class="topbar-brand" href="/">CAMPUS<em>_HACK</em></a>
+  <div class="topbar-right">
+    <span>完成 <%= progress.completed.length %>/2 關</span>
+    <span class="topbar-score">⭐ <%= progress.total %> pt</span>
+    <form action="/reset" method="POST" style="display:inline">
+      <button type="submit" class="btn btn-d"
+        style="font-size:10px;padding:3px 9px"
+        onclick="return confirm('確定重置所有進度？')">reset</button>
+    </form>
+  </div>
+</nav>
