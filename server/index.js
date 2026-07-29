@@ -395,12 +395,7 @@ app.get('/level/2/success', (req, res) => {
   res.render('levels/level2-success', { score });
 });
 
-// ── 啟動 ────────────────────────────────────────────────────
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log('\n🚀  Campus Hack 伺服器啟動！');
-  console.log(`📡  http://localhost:${PORT}\n`);
-});
+
 
 
 // ════════════════════════════════════════════════════════════
@@ -416,8 +411,8 @@ app.listen(PORT, () => {
 // ════════════════════════════════════════════════════════════
 
 // GET /level/3 — 登入頁
+// GET /level/3 — 登入頁
 app.get('/level/3', (req, res) => {
-  // 未完成第2關就擋回去
   if (!req.session.progress.completed.includes(2)) {
     return res.redirect('/level/2');
   }
@@ -433,30 +428,22 @@ app.get('/level/3', (req, res) => {
   });
 });
 
-// POST /level/3/login — 驗證帳號密碼
 app.post('/level/3/login', (req, res) => {
   const { username, password } = req.body;
   if (!req.session.lv3) req.session.lv3 = { wrong: 0, hintUsed: false };
   const s = req.session.lv3;
 
   if (username === 's1234567' && password === '20030415') {
-    // 登入成功：寫入 session，記錄得分
     req.session.loggedIn = true;
     req.session.user = { id: 's1234567', name: '王小明', role: 'student' };
     const score = Math.max(0, 100 - s.wrong * 10 - (s.hintUsed ? 30 : 0));
     saveScore(req, 3, score);
-    return res.redirect('/level/3/success');
+    return res.json({ success: true, score });
   }
 
-  // 登入失敗：扣分
   s.wrong += 1;
   const score = Math.max(0, 100 - s.wrong * 10 - (s.hintUsed ? 30 : 0));
-  res.render('levels/level3', {
-    wrong:    s.wrong,
-    hintUsed: s.hintUsed,
-    error:    '帳號或密碼錯誤',
-    score,
-  });
+  res.json({ success: false, wrong: s.wrong, score });
 });
 
 // POST /level/3/hint — 玩家要求提示（扣分）
@@ -471,4 +458,11 @@ app.get('/level/3/success', (req, res) => {
   if (!req.session.loggedIn) return res.redirect('/level/3');
   const score = req.session.progress.scores[3] || 0;
   res.render('levels/level3-success', { score });
+});
+
+// ── 啟動 ────────────────────────────────────────────────────
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log('\n🚀  Campus Hack 伺服器啟動！');
+  console.log(`📡  http://localhost:${PORT}\n`);
 });
