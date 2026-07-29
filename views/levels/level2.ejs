@@ -62,14 +62,23 @@
     </div>
   </div>
 
-  <!-- 過關區（初始隱藏） -->
-  <div id="pass-area" style="display:none" class="fi">
-    <div class="alert alert-g" style="background:#000000;color:#ffe9e9;">
-      ✓ 歡迎！<br>
-        &nbsp;&nbsp;學生 王小明
+<!-- 過關區（初始隱藏） -->
+<div id="pass-area" style="display:none">
+  <div class="term">
+    <div class="term-bar">
+      <span class="dot dot-r"></span>
+      <span class="dot dot-y"></span>
+      <span class="dot dot-g"></span>
+      <span style="margin-left:8px">identity-check.sh</span>
     </div>
-    <a href="/level/2/success" class="btn btn-s">[ 進入結果頁 ] →</a>
+    <div class="term-body" id="decode-output" style="min-height:120px">
+      <!-- 逐行輸出由 JS 控制 -->
+    </div>
   </div>
+  <div id="next-btn-area" style="display:none;margin-top:12px">
+    <a href="/level/2/success" class="btn btn-s">前往下一關 →</a>
+  </div>
+</div>
 
   <div class="pg-nav">
     <a href="/" class="btn btn-d">← 返回選單</a>
@@ -108,6 +117,7 @@ function verify() {
     if (d.correct) {
       document.getElementById('pass-area').style.display = 'block';
       document.getElementById('err-msg').style.display   = 'none';
+      runDecodeAnimation();
     } else {
       wrong = d.wrong;
       document.getElementById('sc').textContent = d.score;
@@ -126,6 +136,41 @@ function verify() {
 document.getElementById('ans').addEventListener('keydown', e => {
   if (e.key === 'Enter') verify();
 });
+
+function runDecodeAnimation() {
+  const output = document.getElementById('decode-output');
+  output.innerHTML = '';
+
+  // 逐行輸出的內容
+  const lines = [
+    { text: '$ ./identity-check.sh s1234567', class: 't-d', delay: 0 },
+    { text: 'Connecting to student database...', class: 't-d', delay: 600 },
+    { text: '✓ 身分確認成功！', class: 't-g', delay: 1400 },
+    { text: '──────────────────────────────', class: 't-d', delay: 1800 },
+    { text: '學號：s1234567', class: '', delay: 2200 },
+    { text: '姓名：王小明', class: '', delay: 2700 },
+    { text: '科系：資訊工程系 3年級', class: '', delay: 3200 },
+    { text: '生日：2003/04/15　', class: '', delay: 3700 },
+    { text: '──────────────────────────────', class: 't-d', delay: 4200 },
+  ];
+
+  lines.forEach(line => {
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.innerHTML = line.text;
+      if (line.class) div.className = line.class;
+      div.style.animation = 'fadeIn .3s ease';
+      output.appendChild(div);
+    }, line.delay);
+  });
+
+  // 所有行跑完後才顯示「進入結果頁」按鈕
+  setTimeout(() => {
+    document.getElementById('next-btn-area').style.display = 'block';
+  }, 4800);
+}
 </script>
+
+
 
 <%- include('../partials/footer') %>

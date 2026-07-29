@@ -54,6 +54,9 @@ app.post('/reset', (req, res) => {
   req.session.progress = { completed: [], scores: {}, total: 0 };
   req.session.lv1 = null;
   req.session.lv2 = null;
+  req.session.lv3 = null;
+  req.session.loggedIn = null;
+  req.session.user = null;
   res.redirect('/');
 });
 
@@ -397,4 +400,75 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log('\n🚀  Campus Hack 伺服器啟動！');
   console.log(`📡  http://localhost:${PORT}\n`);
+});
+
+
+// ════════════════════════════════════════════════════════════
+// 第3關：弱密碼登入
+//
+// 玩家流程：
+//  1. 進入假校務系統登入頁
+//  2. 帳號來自第2關解出的學號（s1234567）
+//  3. 密碼來自第1關 F12 原始碼找到的學生附件（王小明生日 20030415）
+//  4. 第一次失敗不給提示，需點按鈕才顯示（扣分）
+//
+// 得分：滿分100，每答錯 -10，使用提示 -30，最低 0
+// ════════════════════════════════════════════════════════════
+
+// GET /level/3 — 登入頁
+app.get('/level/3', (req, res) => {
+  // 未完成第2關就擋回去
+  if (!req.session.progress.completed.includes(2)) {
+    return res.redirect('/level/2');
+  }
+  if (!req.session.lv3) {
+    req.session.lv3 = { wrong: 0, hintUsed: false };
+  }
+  const s = req.session.lv3;
+  res.render('levels/level3', {
+    wrong:    s.wrong,
+    hintUsed: s.hintUsed,
+    error:    null,
+    score:    Math.max(0, 100 - s.wrong * 10 - (s.hintUsed ? 30 : 0)),
+  });
+});
+
+// POST /level/3/login — 驗證帳號密碼
+app.post('/level/3/login', (req, res) => {
+  const { username, password } = req.body;
+  if (!req.session.lv3) req.session.lv3 = { wrong: 0, hintUsed: false };
+  const s = req.session.lv3;
+
+  if (username === 's1234567' && password === '20030415') {
+    // 登入成功：寫入 session，記錄得分
+    req.session.loggedIn = true;
+    req.session.user = { id: 's1234567', name: '王小明', role: 'student' };
+    const score = Math.max(0, 100 - s.wrong * 10 - (s.hintUsed ? 30 : 0));
+    saveScore(req, 3, score);
+    return res.redirect('/level/3/success');
+  }
+
+  // 登入失敗：扣分
+  s.wrong += 1;
+  const score = Math.max(0, 100 - s.wrong * 10 - (s.hintUsed ? 30 : 0));
+  res.render('levels/level3', {
+    wrong:    s.wrong,
+    hintUsed: s.hintUsed,
+    error:    '帳號或密碼錯誤',
+    score,
+  });
+});
+
+// POST /level/3/hint — 玩家要求提示（扣分）
+app.post('/level/3/hint', (req, res) => {
+  if (!req.session.lv3) req.session.lv3 = { wrong: 0, hintUsed: false };
+  req.session.lv3.hintUsed = true;
+  res.json({ ok: true });
+});
+
+// GET /level/3/success — 登入成功頁
+app.get('/level/3/success', (req, res) => {
+  if (!req.session.loggedIn) return res.redirect('/level/3');
+  const score = req.session.progress.scores[3] || 0;
+  res.render('levels/level3-success', { score });
 });

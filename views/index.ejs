@@ -44,6 +44,7 @@
         const LEVELS = [
           { id:1, name:'詐騙辨識',    tech:'Email Analysis',    max:100 },
           { id:2, name:'Base64 解碼', tech:'Source Code Review',max:150 },
+          { id:3, name:'弱密碼登入',  tech:'Authentication',    max:100 },
         ];
         LEVELS.forEach(lv => {
           const done     = progress.completed.includes(lv.id);
