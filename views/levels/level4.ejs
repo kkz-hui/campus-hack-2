@@ -1,0 +1,145 @@
+<%- include('../partials/header', { pageTitle: 'Lv4 目錄遊走' }) %>
+
+<style>
+.file-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  margin-bottom: 3px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: rgba(255,255,255,.02);
+  transition: background .12s;
+}
+.file-row:hover { background: rgba(255,255,255,.05); }
+.file-info { display: flex; align-items: center; gap: 10px; }
+.file-icon { font-size: 16px; }
+.file-name { font-size: 13px; }
+.file-size { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.file-locked { color: var(--text-dim); }
+.lock-badge {
+  font-size: 10px; color: var(--red);
+  border: 1px solid var(--red);
+  padding: 1px 5px; border-radius: 2px; margin-left: 6px;
+}
+</style>
+
+<div class="wrap">
+
+  <div class="pg-header fi">
+    <div class="pg-lv">LV 04 / 04 &nbsp;·&nbsp; 目錄遊走</div>
+    <div class="pg-title">Path Traversal</div>
+    <div class="pg-sub">
+      滿分 120 pt &nbsp;·&nbsp; 錯誤路徑 -15 &nbsp;·&nbsp; 使用提示 -50 &nbsp;·&nbsp; 最低 0
+    </div>
+  </div>
+
+  <!-- 資源下載頁面 -->
+  <div class="fi" style="margin-bottom:16px">
+    <div style="border:1px solid var(--border);border-radius:4px;
+                background:#0a0a0a">
+
+      <!-- 頁首 -->
+      <div style="background:linear-gradient(90deg,#1a237e,#283593);padding:14px 20px">
+        <div style="color:#fff;font-size:15px;font-weight:700">🏫 校內資源下載中心</div>
+        <div style="color:rgba(255,255,255,.6);font-size:11px;margin-top:2px">
+          Campus Resource Download Center — 已登入：王小明
+        </div>
+      </div>
+
+      <!-- 檔案列表 -->
+      <div style="padding:14px">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:10px">
+          共 6 個檔案
+          <span style="float:right;color:<%= hintUsed ? 'var(--amber)' : 'var(--text-dim)' %>">
+            預計得分：<span id="sc"><%= score %></span> pt
+          </span>
+        </div>
+
+        <%
+        const files = [
+          { name:'2024學年度課程大綱.pdf', size:'2.4 MB', icon:'📄', key:'syllabus.pdf' },
+          { name:'校園地圖.png',            size:'1.8 MB', icon:'🖼', key:'campus-map.png' },
+          { name:'學生手冊.pdf',            size:'4.1 MB', icon:'📄', key:'student-handbook.pdf' },
+          { name:'獎學金申請辦法.pdf',       size:'312 KB', icon:'📄', key:'scholarship.pdf' },
+          { name:'系統公告.txt',            size:'2 KB',   icon:'📋', key:'notice.txt' },
+          { name:'access.log',             size:'48 KB',   icon:'📋', key:'access.log', locked:true },
+        ];
+        %>
+
+        <% files.forEach(f => { %>
+        <div class="file-row">
+          <div class="file-info">
+            <span class="file-icon"><%= f.icon %></span>
+            <div>
+              <div class="file-name <%= f.locked ? 'file-locked' : '' %>">
+                <%= f.name %>
+                <% if (f.locked) { %>
+                <span class="lock-badge">🔒</span>
+                <% } %>
+              </div>
+              <div class="file-size"><%= f.size %></div>
+            </div>
+          </div>
+          <button class="btn"
+            style="font-size:10px;padding:3px 10px"
+            onclick="downloadFile('<%= f.key %>')">
+            下載
+          </button>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提示按鈕 -->
+  <div id="hint-area" style="margin-bottom:14px">
+    <% if (!hintUsed) { %>
+    <button class="btn btn-a" onclick="useHint()" id="hint-btn">
+      💡 需要提示（得分 -50）
+    </button>
+    <% } %>
+    <div id="hint-box" style="display:<%= hintUsed ? 'block' : 'none' %>;margin-top:10px">
+      <div class="alert alert-b">
+        💡 提示：似乎可以繞過權限……
+      </div>
+    </div>
+  </div>
+
+  <!-- 得分列 -->
+  <div class="score-row">
+    預計得分：<span class="sc-cur" id="sc2"><%= score %></span>
+    / <span class="sc-max">120</span> pt
+    <% if (wrong > 0) { %>
+    &nbsp;·&nbsp; 錯誤嘗試 <%= wrong %> 次（-15/次）
+    <% } %>
+    <% if (hintUsed) { %>
+    &nbsp;·&nbsp; <span style="color:var(--red)">已使用提示（-50）</span>
+    <% } %>
+  </div>
+
+  <div class="pg-nav" style="margin-top:16px">
+    <a href="/" class="btn btn-d">← 返回選單</a>
+  </div>
+</div>
+
+<script>
+// 點擊下載按鈕時，在新分頁開啟真實的 /download 路由
+function downloadFile(key) {
+  window.open('/download?file=' + key, '_blank');
+}
+
+function useHint() {
+  fetch('/level/4/hint', { method: 'POST' })
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById('hint-btn').style.display = 'none';
+    document.getElementById('hint-box').style.display = 'block';
+    document.getElementById('sc').textContent  = d.score;
+    document.getElementById('sc2').textContent = d.score;
+  });
+}
+</script>
+
+<%- include('../partials/footer') %>

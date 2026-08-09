@@ -55,6 +55,10 @@ app.post('/reset', (req, res) => {
   req.session.lv1 = null;
   req.session.lv2 = null;
   req.session.lv3 = null;
+  req.session.lv4 = null;
+  req.session.lv5 = null;
+  req.session.lv6 = null;
+  res.clearCookie('role');
   req.session.loggedIn = null;
   req.session.user = null;
   res.redirect('/');
@@ -459,6 +463,294 @@ app.get('/level/3/success', (req, res) => {
   const score = req.session.progress.scores[3] || 0;
   res.render('levels/level3-success', { score });
 });
+
+// ════════════════════════════════════════════════════════════
+// 第4關：目錄遊走（Path Traversal）
+//
+// 玩家流程：
+//  1. 進入校內資源下載頁（/level/4）
+//  2. 點擊 access.log 會顯示「權限不足」
+//  3. 在網址列改成 /download?file=../logs/access.log
+//  4. 後端回傳 log 內容，頁面顯示動畫
+//
+// 得分：滿分120，每次錯誤嘗試 -15，使用提示 -50，最低 0
+// ════════════════════════════════════════════════════════════
+
+const FAKE_FILES = {
+  'syllabus.pdf':        '2024學年度課程大綱（PDF）',
+  'campus-map.png':      '校園地圖（PNG 圖片）',
+  'student-handbook.pdf':'學生手冊（PDF）',
+  'scholarship.pdf':     '獎學金申請辦法（PDF）',
+  'notice.txt':          '系統公告：維護時間為每週日 02:00-04:00。',
+};
+
+const ACCESS_LOG = `[2024-03-14 23:58:01] GET /download?file=syllabus.pdf         200 OK
+[2024-03-14 23:59:12] GET /download?file=../etc/passwd       403 FORBIDDEN
+[2024-03-15 00:12:33] POST /admin/login  admin               200 SUCCESS  from 10.0.0.2
+[2024-03-15 00:13:01] GET /admin/panel                       200 OK       session=e8f2a3b4c
+[2024-03-15 00:14:22] SET permission=superuser               uid=admin
+[2024-03-15 02:31:55] GET /admin/config                      200 OK
+--------------------------------------------------------------
+app.get('/level/4', (req, res) => {
+  if (!req.session.progress.completed.includes(3)) {
+    return res.redirect('/level/3');
+  }
+  if (!req.session.lv4) {
+    req.session.lv4 = { wrong: 0, hintUsed: false };
+  }
+  const s = req.session.lv4;
+  res.render('levels/level4', {
+    wrong:    s.wrong,
+    hintUsed: s.hintUsed,
+    score:    Math.max(0, 120 - s.wrong * 15 - (s.hintUsed ? 50 : 0)),
+  });
+});
+
+// GET /download — 真實的下載路由（存在路徑跳脫漏洞）
+app.get('/download', (req, res) => {
+  if (!req.session.progress.completed.includes(3)) {
+    return res.redirect('/level/3');
+  }
+  if (!req.session.lv4) {
+    req.session.lv4 = { wrong: 0, hintUsed: false };
+  }
+  const s   = req.session.lv4;
+  const file = (req.query.file || '').trim();
+
+  // 成功：路徑跳脫到 log 檔
+if (file.includes('../') && (file.includes('access.log') || file.includes('logs'))) {
+  const score = Math.max(0, 120 - s.wrong * 15 - (s.hintUsed ? 50 : 0));
+  saveScore(req, 4, score);
+  // 改用 HTML 回傳，讓玩家可以點按鈕回到遊戲
+  res.set('Content-Type', 'text/html; charset=utf-8');
+  return res.send(`<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>access.log</title>
+  <style>
+    body { background:#0c0c0c; color:#ccc; font-family:'Courier New',monospace; padding:32px; line-height:1.8; }
+    pre  { font-family:inherit; white-space:pre-wrap; }
+    .amber { color:#ffaa00; }
+    .green { color:#4af626; }
+    .red   { color:#ff3355; }
+    .btn {
+      display:inline-block; margin-top:24px; padding:10px 24px;
+      background:#4af626; color:#000; font-family:inherit;
+      font-size:14px; font-weight:700; text-decoration:none;
+      border-radius:3px; letter-spacing:1px;
+    }
+    .btn:hover { background:#2ea614; }
+    hr { border:none; border-top:1px solid #2a2a2a; margin:16px 0; }
+  </style>
+</head>
+<body>
+  <pre class="amber">$ cat ../logs/access.log</pre>
+  <hr>
+  <pre>${ACCESS_LOG}</pre>
+  <hr>
+  <pre class="green">✓ 得分已記錄：${score} pt</pre>
+  <a class="btn" href="/level/5">[ 進入第5關 ] →</a>
+  &nbsp;
+  <a class="btn" style="background:transparent;border:1px solid #4af626;color:#4af626"
+     href="/level/4">← 返回第4關</a>
+</body>
+</html>`);
+}
+
+  // 嘗試跳脫但路徑不對
+if (file.includes('../')) {
+  s.wrong += 1;
+  const score = Math.max(0, 120 - s.wrong * 15 - (s.hintUsed ? 50 : 0));
+  res.set('Content-Type', 'text/html; charset=utf-8');
+  return res.send(`<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8"><title>404 Not Found</title>
+  <style>
+    body { background:#0c0c0c; color:#ccc; font-family:'Courier New',monospace; padding:32px; line-height:1.8; }
+    .red   { color:#ff3355; }
+    .amber { color:#ffaa00; }
+    .btn {
+      display:inline-block; margin-top:20px; padding:9px 20px;
+      border:1px solid #4af626; color:#4af626; font-family:inherit;
+      font-size:13px; text-decoration:none; border-radius:3px;
+    }
+    .btn:hover { background:#4af626; color:#000; }
+  </style>
+</head>
+<body>
+  <div class="red">Error 404: not found ${file}</div>
+  <div class="amber">嘗試次數：${s.wrong}（每次 -15 pt）</div>
+  <div class="amber">目前預計得分：${score} pt</div>
+  <a class="btn" href="/level/4">← 返回第4關繼續嘗試</a>
+</body>
+</html>`);
+}
+
+  // 點擊 access.log 直接下載：權限不足
+if (file === 'access.log') {
+  res.set('Content-Type', 'text/html; charset=utf-8');
+  return res.status(403).send(`<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8"><title>403 Forbidden</title>
+  <style>
+    body { background:#0c0c0c; color:#ccc; font-family:'Courier New',monospace; padding:32px; line-height:1.8; }
+    .red   { color:#ff3355; }
+    .dim   { color:#555; }
+    .btn {
+      display:inline-block; margin-top:20px; padding:9px 20px;
+      border:1px solid #4af626; color:#4af626; font-family:inherit;
+      font-size:13px; text-decoration:none; border-radius:3px;
+    }
+    .btn:hover { background:#4af626; color:#000; }
+  </style>
+</head>
+<body>
+  <div class="red">Error 403: Permission Denied</div>
+  <div>權限不足。</div>
+  <a class="btn" href="/level/4">← 返回第4關</a>
+</body>
+</html>`);
+}
+
+  // 一般檔案（不扣分）
+  if (FAKE_FILES[file]) {
+    return res.json({ success: false, info: `正在下載：${FAKE_FILES[file]}`, score: null });
+  }
+
+  return res.json({ success: false, error: `Error 404：not found ${file}`, wrong: s.wrong, score: Math.max(0, 120 - s.wrong * 15 - (s.hintUsed ? 50 : 0)) });
+});
+
+app.post('/level/4/hint', (req, res) => {
+  if (!req.session.lv4) req.session.lv4 = { wrong: 0, hintUsed: false };
+  req.session.lv4.hintUsed = true;
+  const s = req.session.lv4;
+  res.json({ score: Math.max(0, 120 - s.wrong * 15 - 50) });
+});
+
+// ════════════════════════════════════════════════════════════
+// 第5關：HTML 原始碼找 Flag
+//
+// 玩家流程：
+//  1. 進入下載區的某個頁面
+//  2. 用 F12 → Elements 在 HTML comment 找到 FLAG_PART1: CAMPUS
+//  3. 同時找到 role=user 的線索
+//  4. 輸入 FLAG 值過關
+//
+// 得分：滿分100，每答錯 -15，使用提示 -40，最低 0
+// ════════════════════════════════════════════════════════════
+
+app.get('/level/5', (req, res) => {
+  if (!req.session.progress.completed.includes(4)) {
+    return res.redirect('/level/4');
+  }
+  if (!req.session.lv5) {
+    req.session.lv5 = { wrong: 0, hintUsed: false };
+  }
+  const s = req.session.lv5;
+  res.render('levels/level5', {
+    wrong:    s.wrong,
+    hintUsed: s.hintUsed,
+    score:    Math.max(0, 100 - s.wrong * 15 - (s.hintUsed ? 40 : 0)),
+  });
+});
+
+app.post('/level/5/verify', (req, res) => {
+  if (!req.session.lv5) req.session.lv5 = { wrong: 0, hintUsed: false };
+  const s = req.session.lv5;
+  const answer = (req.body.answer || '').trim().toUpperCase();
+
+  if (answer === 'CAMPUS') {
+    const score = Math.max(0, 100 - s.wrong * 15 - (s.hintUsed ? 40 : 0));
+    saveScore(req, 5, score);
+    return res.json({ correct: true, score });
+  }
+
+  s.wrong += 1;
+  const score = Math.max(0, 100 - s.wrong * 15 - (s.hintUsed ? 40 : 0));
+  res.json({ correct: false, wrong: s.wrong, score });
+});
+
+app.post('/level/5/hint', (req, res) => {
+  if (!req.session.lv5) req.session.lv5 = { wrong: 0, hintUsed: false };
+  req.session.lv5.hintUsed = true;
+  const s = req.session.lv5;
+  res.json({ score: Math.max(0, 100 - s.wrong * 15 - 40) });
+});
+
+// ════════════════════════════════════════════════════════════
+// 第6關：Cookie 存取
+//
+// 玩家流程：
+//  1. 進入頁面，後端設定真實 cookie: role=user
+//  2. 用 F12 → Application → Cookies 找到 role=user
+//  3. 直接在 F12 裡把值改成 role=admin
+//  4. 按「驗證權限」按鈕，後端讀取 cookie 判斷
+//
+// 得分：滿分120，每答錯 -20，使用提示 -50，最低 0
+// ════════════════════════════════════════════════════════════
+
+app.get('/level/6', (req, res) => {
+  if (!req.session.progress.completed.includes(5)) {
+    return res.redirect('/level/5');
+  }
+  if (!req.session.lv6) {
+    req.session.lv6 = { wrong: 0, hintUsed: false };
+  }
+
+  // 設定真實 cookie，讓玩家可以在 F12 看到
+  if (!req.cookies.role) {
+    res.cookie('role', 'user', {
+      httpOnly: false,  // 讓 JS 和 F12 都能看到
+      sameSite: 'lax',
+    });
+  }
+
+  const s = req.session.lv6;
+  const currentRole = req.cookies.role || 'user';
+  res.render('levels/level6', {
+    wrong:       s.wrong,
+    hintUsed:    s.hintUsed,
+    currentRole,
+    score:       Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0)),
+  });
+});
+
+app.post('/level/6/check', (req, res) => {
+  if (!req.session.lv6) req.session.lv6 = { wrong: 0, hintUsed: false };
+  const s = req.session.lv6;
+  const currentRole = req.cookies.role || 'user';
+
+  if (currentRole === 'admin') {
+    const score = Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0));
+    saveScore(req, 6, score);
+    res.clearCookie('role');
+    return res.json({
+      success: true,
+      score,
+      flag: 'FLAG_PART2: HACK',
+    });
+  }
+
+  s.wrong += 1;
+  const score = Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0));
+  res.json({
+    success: false,
+    currentRole,
+    wrong: s.wrong,
+    score,
+  });
+});
+
+app.post('/level/6/hint', (req, res) => {
+  if (!req.session.lv6) req.session.lv6 = { wrong: 0, hintUsed: false };
+  req.session.lv6.hintUsed = true;
+  const s = req.session.lv6;
+  res.json({ score: Math.max(0, 120 - s.wrong * 20 - 50) });
+});
+
 
 // ── 啟動 ────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;

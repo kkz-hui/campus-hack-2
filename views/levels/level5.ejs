@@ -1,0 +1,165 @@
+<%- include('../partials/header', { pageTitle: 'Lv5 HTML 原始碼' }) %>
+
+<!--FLAG_PART1: CAMPUS; cookie: role=user; admin panel: /admin/dashboard-->
+
+<div class="wrap">
+
+  <div class="pg-header fi">
+    <div class="pg-lv">LV 05 / 06 &nbsp;·&nbsp; HTML 原始碼</div>
+    <div class="pg-title">Source Code Review</div>
+    <div class="pg-sub">
+      滿分 100 pt &nbsp;·&nbsp; 每答錯 -15 &nbsp;·&nbsp; 使用提示 -40 &nbsp;·&nbsp; 最低 0
+    </div>
+  </div>
+
+
+  <!-- 假的資源下載頁面（內含 FLAG 在 HTML comment） -->
+  <div class="fi" style="margin-bottom:16px">
+    <div style="border:1px solid var(--border);border-radius:4px;background:#0a0a0a">
+      <div style="background:linear-gradient(90deg,#1a237e,#283593);
+                  padding:14px 20px;border-radius:4px 4px 0 0">
+        <div style="color:#fff;font-size:15px;font-weight:700">🏫 校內資源下載中心</div>
+        <div style="color:rgba(255,255,255,.6);font-size:11px;margin-top:2px">
+          已登入：王小明 &nbsp;|&nbsp; 權限：student
+        <p style="margin-top:12px;font-size:12px;color:var(--text-dim)">
+          如需更改權限，請聯繫系統管理員。
+        </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 輸入區 -->
+  <div style="border:1px solid var(--border);border-radius:4px;
+              padding:16px;background:rgba(255,255,255,.02);margin-bottom:14px" class="fi">
+    <div style="font-size:13px;margin-bottom:10px">
+      在 HTML 原始碼中找到 FLAG 了嗎？輸入 FLAG_PART1 的值：
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span style="font-size:12px;color:var(--text-dim)">FLAG_PART1 =</span>
+      <input type="text" id="ans" class="inp"
+        style="max-width:200px" placeholder="" autocomplete="off">
+      <button class="btn btn-s" onclick="verify()">[ 確認 ]</button>
+      <% if (!hintUsed) { %>
+      <button class="btn btn-a" onclick="useHint()" id="hint-btn">
+        [ 需要提示 (-40pt) ]
+      </button>
+      <% } %>
+    </div>
+
+    <div id="err-msg" style="display:none;margin-top:10px"></div>
+
+    <div id="hint-box"
+      style="display:<%= hintUsed ? 'block' : 'none' %>;margin-top:12px">
+      <div class="alert alert-b">
+        💡 提示：在這個頁面按 F12 → Elements，
+        搜尋 <code style="color:var(--amber)">&lt;!--</code>，
+        找到 HTML 注解裡藏的 FLAG_PART1。
+      </div>
+    </div>
+
+    <div class="score-row" style="margin-top:10px">
+      預計得分：<span class="sc-cur" id="sc"><%= score %></span>
+      / <span class="sc-max">100</span> pt
+      <% if (wrong > 0) { %>
+      &nbsp;·&nbsp; 答錯 <%= wrong %> 次（-15/次）
+      <% } %>
+      <% if (hintUsed) { %>
+      &nbsp;·&nbsp; <span style="color:var(--red)">已使用提示（-40）</span>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- 成功動畫區 -->
+  <div id="pass-area" style="display:none;margin-bottom:14px">
+    <div class="term">
+      <div class="term-bar">
+        <span class="dot dot-r"></span>
+        <span class="dot dot-y"></span>
+        <span class="dot dot-g"></span>
+        <span style="margin-left:8px">flag-capture.sh</span>
+      </div>
+      <div class="term-body" id="flag-output" style="min-height:120px"></div>
+    </div>
+    <div id="next-btn-area" style="display:none;margin-top:12px">
+      <a href="/level/6" class="btn btn-s">進入第6關 →</a>
+    </div>
+  </div>
+
+  <div class="pg-nav">
+    <a href="/" class="btn btn-d">← 返回選單</a>
+  </div>
+</div>
+
+<script>
+function useHint() {
+  fetch('/level/5/hint', { method: 'POST' })
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById('hint-btn').style.display = 'none';
+    document.getElementById('hint-box').style.display = 'block';
+    document.getElementById('sc').textContent = d.score;
+  });
+}
+
+function verify() {
+  const answer = document.getElementById('ans').value;
+  fetch('/level/5/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ answer }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.correct) {
+      document.getElementById('err-msg').style.display = 'none';
+      document.getElementById('pass-area').style.display = 'block';
+      runFlagAnimation(d.score);
+    } else {
+      document.getElementById('sc').textContent = d.score;
+      const err = document.getElementById('err-msg');
+      err.style.display = 'block';
+      err.innerHTML = `<div class="alert alert-r">
+        ✗ 不正確，再找找看。
+        <div style="margin-top:4px;font-size:11px;color:var(--amber)">
+          ⭐ 目前預計得分：${d.score} pt
+        </div>
+      </div>`;
+    }
+  });
+}
+
+function runFlagAnimation(score) {
+  const output = document.getElementById('flag-output');
+  output.innerHTML = '';
+  const lines = [
+    { text: '$ grep -r "FLAG" page_source.html', class: 't-d', delay: 0 },
+    { text: '掃描 HTML 原始碼...', class: 't-d', delay: 600 },
+    { text: '──────────────────────────────', class: 't-d', delay: 1200 },
+    { text: '✓ 發現隱藏內容！', class: 't-g', delay: 1800 },
+    { text: 'FLAG_PART1: <span style="color:var(--amber)">CAMPUS</span>', class: '', delay: 2400 },
+    { text: 'cookie: <span style="color:var(--amber)">role=user</span> ← 下一關線索', class: 't-a', delay: 3000 },
+    { text: '──────────────────────────────', class: 't-d', delay: 3600 },
+    { text: `本關得分：<span style="color:var(--amber)">${score} pt</span>`, class: 't-a', delay: 4000 },
+  ];
+  lines.forEach(line => {
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.innerHTML = line.text;
+      if (line.class) div.className = line.class;
+      div.style.animation = 'fadeIn .3s ease';
+      output.appendChild(div);
+    }, line.delay);
+  });
+  setTimeout(() => {
+    document.getElementById('next-btn-area').style.display = 'block';
+  }, 4800);
+}
+
+document.getElementById('ans').addEventListener('keydown', e => {
+  if (e.key === 'Enter') verify();
+});
+</script>
+
+<%- include('../partials/footer') %>
