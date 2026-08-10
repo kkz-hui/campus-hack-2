@@ -29,17 +29,29 @@
     </div>
   </div>
 
-  <!-- 輸入區 -->
+<!-- 輸入區 -->
   <div style="border:1px solid var(--border);border-radius:4px;
               padding:16px;background:rgba(255,255,255,.02);margin-bottom:14px" class="fi">
-    <div style="font-size:13px;margin-bottom:10px">
-      在 HTML 原始碼中找到 FLAG 了嗎？輸入 FLAG_PART1 的值：
+    <div style="font-size:13px;margin-bottom:14px">
+      在 HTML 原始碼中找到了嗎？把完整內容填入下方：
     </div>
 
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <span style="font-size:12px;color:var(--text-dim)">FLAG_PART1 =</span>
-      <input type="text" id="ans" class="inp"
-        style="max-width:200px" placeholder="" autocomplete="off">
+    <!-- FLAG 輸入 -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <span style="font-size:13px;color:var(--text-dim);min-width:60px">FLAG =</span>
+      <input type="text" id="ans-flag" class="inp"
+        style="max-width:280px;flex:1" placeholder="" autocomplete="off">
+    </div>
+
+    <!-- cookie 輸入 -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <span style="font-size:13px;color:var(--text-dim);min-width:60px">cookie =</span>
+      <input type="text" id="ans-cookie" class="inp"
+        style="max-width:280px;flex:1" placeholder="" autocomplete="off">
+    </div>
+
+    <!-- 按鈕列 -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-s" onclick="verify()">[ 確認 ]</button>
       <% if (!hintUsed) { %>
       <button class="btn btn-a" onclick="useHint()" id="hint-btn">
@@ -55,9 +67,21 @@
       <div class="alert alert-b">
         💡 提示：在這個頁面按 F12 → Elements，
         搜尋 <code style="color:var(--amber)">&lt;!--</code>，
-        找到 HTML 注解裡藏的 FLAG_PART1。
+        找到 HTML 注解裡藏的內容。
       </div>
     </div>
+
+    <div class="score-row" style="margin-top:10px">
+      預計得分：<span class="sc-cur" id="sc"><%= score %></span>
+      / <span class="sc-max">100</span> pt
+      <% if (wrong > 0) { %>
+      &nbsp;·&nbsp; 答錯 <%= wrong %> 次（-15/次）
+      <% } %>
+      <% if (hintUsed) { %>
+      &nbsp;·&nbsp; <span style="color:var(--red)">已使用提示（-40）</span>
+      <% } %>
+    </div>
+  </div>
 
     <div class="score-row" style="margin-top:10px">
       預計得分：<span class="sc-cur" id="sc"><%= score %></span>
