@@ -106,8 +106,8 @@ function useHint() {
   .then(d => {
     document.getElementById('hint-btn').style.display = 'none';
     document.getElementById('hint-box').style.display = 'block';
-    document.getElementById('sc').textContent = d.score;
-  });
+    const scEl = document.getElementById('sc');
+    if (scEl) scEl.textContent = d.score;  });
 }
 
 function checkCookie() {
@@ -131,23 +131,27 @@ function checkCookie() {
 
       document.getElementById('err-msg').style.display  = 'none';
       document.getElementById('pass-area').style.display = 'block';
-      document.getElementById('sc').textContent = d.score;
+      const scEl = document.getElementById('sc');
+      if (scEl) scEl.textContent = d.score;
       runCookieAnimation(d.score, d.flag);
-    } else {
-      const err = document.getElementById('err-msg');
-      err.style.display = 'block';
+      } else {
+        const err = document.getElementById('err-msg');
+        const scEl = document.getElementById('sc');
+        const roleEl = document.getElementById('role-display');
 
-      // 更新顯示目前的 role
-      document.getElementById('role-display').textContent = d.currentRole;
-      document.getElementById('sc').textContent = d.score;
+        if (roleEl) roleEl.textContent = d.currentRole;
+        if (scEl) scEl.textContent = d.score;
 
-      err.innerHTML = `<div class="alert alert-r">
-        ✗ 權限不足。
-        <div style="margin-top:4px;font-size:11px;color:var(--amber)">
-          ⭐ 目前預計得分：${d.score} pt（已嘗試 ${d.wrong} 次）
-        </div>
-      </div>`;
-    }
+        if (err) {
+          err.style.display = 'block';
+          err.innerHTML = `<div class="alert alert-r">
+            ✗ 權限不足。<br>
+            <div style="margin-top:4px;font-size:11px;color:var(--amber)">
+              ⭐ 目前預計得分：${d.score} pt（已嘗試 ${d.wrong} 次）
+            </div>
+          </div>`;
+        }
+      }
   });
 }
 
