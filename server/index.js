@@ -490,7 +490,7 @@ const ACCESS_LOG = `[2024-03-14 23:58:01] GET /download?file=syllabus.pdf       
 [2024-03-15 00:13:01] GET /admin/panel                       200 OK       session=e8f2a3b4c
 [2024-03-15 00:14:22] SET permission=superuser               uid=admin
 [2024-03-15 02:31:55] GET /admin/config                      200 OK
---------------------------------------------------------------
+--------------------------------------------------------------`;
 app.get('/level/4', (req, res) => {
   if (!req.session.progress.completed.includes(3)) {
     return res.redirect('/level/3');
