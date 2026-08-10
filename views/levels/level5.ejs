@@ -32,9 +32,6 @@
 <!-- 輸入區 -->
   <div style="border:1px solid var(--border);border-radius:4px;
               padding:16px;background:rgba(255,255,255,.02);margin-bottom:14px" class="fi">
-    <div style="font-size:13px;margin-bottom:14px">
-      在 HTML 原始碼中找到了嗎？把完整內容填入下方：
-    </div>
 
     <!-- FLAG 輸入 -->
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
@@ -65,9 +62,7 @@
     <div id="hint-box"
       style="display:<%= hintUsed ? 'block' : 'none' %>;margin-top:12px">
       <div class="alert alert-b">
-        💡 提示：在這個頁面按 F12 → Elements，
-        搜尋 <code style="color:var(--amber)">&lt;!--</code>，
-        找到 HTML 注解裡藏的內容。
+        💡 提示：原始碼似乎藏了什麼。
       </div>
     </div>
 
@@ -161,11 +156,11 @@ function runFlagAnimation(score) {
   output.innerHTML = '';
   const lines = [
     { text: '$ grep -r "FLAG" page_source.html', class: 't-d', delay: 0 },
-    { text: '掃描 HTML 原始碼...', class: 't-d', delay: 600 },
+    { text: '掃描中...', class: 't-d', delay: 600 },
     { text: '──────────────────────────────', class: 't-d', delay: 1200 },
     { text: '✓ 發現隱藏內容！', class: 't-g', delay: 1800 },
-    { text: 'FLAG_PART1: <span style="color:var(--amber)">CAMPUS</span>', class: '', delay: 2400 },
-    { text: 'cookie: <span style="color:var(--amber)">role=user</span> ← 下一關線索', class: 't-a', delay: 3000 },
+    { text: 'FLAG_PART1: CAMPUS', class: '', delay: 2400 },
+    { text: 'cookie: role=user', class: 't-a', delay: 3000 },
     { text: '──────────────────────────────', class: 't-d', delay: 3600 },
     { text: `本關得分：<span style="color:var(--amber)">${score} pt</span>`, class: 't-a', delay: 4000 },
   ];
