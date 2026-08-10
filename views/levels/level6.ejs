@@ -10,30 +10,6 @@
     </div>
   </div>
 
-  <!-- 任務說明 -->
-  <div class="term fi" style="margin-bottom:16px">
-    <div class="term-bar">
-      <span class="dot dot-r"></span>
-      <span class="dot dot-y"></span>
-      <span class="dot dot-g"></span>
-      <span style="margin-left:8px">mission-briefing</span>
-    </div>
-    <div class="term-body">
-      <div class="t-d">$ cat mission.txt</div>
-      <div style="margin-top:6px;color:var(--text)">
-        第5關發現線索：系統用 cookie 的 <span class="t-a">role</span> 欄位判斷權限。<br>
-        你目前的 cookie 是 <span class="t-a">role=user</span>，
-        試著把它改成 <span class="t-g">role=admin</span>。
-      </div>
-      <div style="margin-top:8px" class="t-a">
-        ⚠ 操作方式：F12 → Application → Cookies → localhost:3000<br>
-        <span style="color:var(--text-dim);font-size:12px">
-          找到 role 這個欄位，雙擊 Value 直接修改。
-        </span>
-      </div>
-    </div>
-  </div>
-
   <!-- 門禁系統模擬 -->
   <div class="fi" style="margin-bottom:16px">
     <div style="border:1px solid var(--border);border-radius:4px;
@@ -54,7 +30,7 @@
         </div>
         <div id="access-sub" style="font-size:12px;color:var(--text-dim);
              margin-top:8px;transition:all .5s">
-          目前 cookie：role = <span id="role-display" style="color:var(--amber)">
+          當前權限：USER
             <%= currentRole %>
           </span>
         </div>
@@ -86,13 +62,7 @@
     <div id="hint-box"
       style="display:<%= hintUsed ? 'block' : 'none' %>;margin-top:12px">
       <div class="alert alert-b">
-        💡 提示：<br>
-        1. 按 F12 開啟開發者工具<br>
-        2. 點「Application」分頁（Chrome）或「儲存空間」分頁<br>
-        3. 左側找「Cookies」→「http://localhost:3000」<br>
-        4. 找到 <code style="color:var(--amber)">role</code> 這一行<br>
-        5. 雙擊 Value 欄位，把 <code>user</code> 改成 <code style="color:var(--green)">admin</code><br>
-        6. 按 Enter 確認，回來點「驗證權限」
+        💡 提示：cookies是否可以修改呢？
       </div>
     </div>
 
@@ -111,12 +81,6 @@
   <!-- 成功動畫區 -->
   <div id="pass-area" style="display:none;margin-bottom:14px">
     <div class="term">
-      <div class="term-bar">
-        <span class="dot dot-r"></span>
-        <span class="dot dot-y"></span>
-        <span class="dot dot-g"></span>
-        <span style="margin-left:8px">cookie-exploit.sh</span>
-      </div>
       <div class="term-body" id="cookie-output" style="min-height:120px"></div>
     </div>
     <div id="next-btn-area" style="display:none;margin-top:12px">
@@ -178,10 +142,7 @@ function checkCookie() {
       document.getElementById('sc').textContent = d.score;
 
       err.innerHTML = `<div class="alert alert-r">
-        ✗ 權限不足，目前 role = <span style="color:var(--amber)">${d.currentRole}</span><br>
-        <span style="font-size:12px">
-          請用 F12 → Application → Cookies 把 role 的值改成 admin。
-        </span>
+        ✗ 權限不足。
         <div style="margin-top:4px;font-size:11px;color:var(--amber)">
           ⭐ 目前預計得分：${d.score} pt（已嘗試 ${d.wrong} 次）
         </div>
