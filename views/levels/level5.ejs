@@ -79,17 +79,6 @@
     </div>
   </div>
 
-    <div class="score-row" style="margin-top:10px">
-      預計得分：<span class="sc-cur" id="sc"><%= score %></span>
-      / <span class="sc-max">100</span> pt
-      <% if (wrong > 0) { %>
-      &nbsp;·&nbsp; 答錯 <%= wrong %> 次（-15/次）
-      <% } %>
-      <% if (hintUsed) { %>
-      &nbsp;·&nbsp; <span style="color:var(--red)">已使用提示（-40）</span>
-      <% } %>
-    </div>
-  </div>
 
   <!-- 成功動畫區 -->
   <div id="pass-area" style="display:none;margin-bottom:14px">
