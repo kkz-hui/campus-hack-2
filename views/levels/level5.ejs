@@ -128,16 +128,18 @@ function useHint() {
 }
 
 function verify() {
-  const answer = document.getElementById('ans').value;
+  const flag   = document.getElementById('ans-flag').value.trim();
+  const cookie = document.getElementById('ans-cookie').value.trim();
+
   fetch('/level/5/verify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ answer }),
+    body: JSON.stringify({ flag, cookie }),
   })
   .then(r => r.json())
   .then(d => {
     if (d.correct) {
-      document.getElementById('err-msg').style.display = 'none';
+      document.getElementById('err-msg').style.display  = 'none';
       document.getElementById('pass-area').style.display = 'block';
       runFlagAnimation(d.score);
     } else {
@@ -145,7 +147,7 @@ function verify() {
       const err = document.getElementById('err-msg');
       err.style.display = 'block';
       err.innerHTML = `<div class="alert alert-r">
-        ✗ 不正確，再找找看。
+        ✗ ${d.msg}
         <div style="margin-top:4px;font-size:11px;color:var(--amber)">
           ⭐ 目前預計得分：${d.score} pt
         </div>
