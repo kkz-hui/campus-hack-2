@@ -660,9 +660,14 @@ app.get('/level/5', (req, res) => {
 app.post('/level/5/verify', (req, res) => {
   if (!req.session.lv5) req.session.lv5 = { wrong: 0, hintUsed: false };
   const s = req.session.lv5;
-  const answer = (req.body.answer || '').trim().toUpperCase();
 
-  if (answer === 'CAMPUS') {
+  const flag   = (req.body.flag   || '').trim();
+  const cookie = (req.body.cookie || '').trim();
+
+  const flagOk   = flag.toUpperCase()   === 'FLAG_PART1: CAMPUS';
+  const cookieOk = cookie.toLowerCase() === 'role=user';
+
+  if (flagOk && cookieOk) {
     const score = Math.max(0, 100 - s.wrong * 15 - (s.hintUsed ? 40 : 0));
     saveScore(req, 5, score);
     return res.json({ correct: true, score });
@@ -670,7 +675,13 @@ app.post('/level/5/verify', (req, res) => {
 
   s.wrong += 1;
   const score = Math.max(0, 100 - s.wrong * 15 - (s.hintUsed ? 40 : 0));
-  res.json({ correct: false, wrong: s.wrong, score });
+
+  // 給不同的錯誤提示
+  let msg = '兩個欄位都不正確，再找找看。';
+  if (flagOk  && !cookieOk) msg = 'FLAG 正確！但 cookie 的值不對。';
+  if (!flagOk && cookieOk)  msg = 'Cookie 正確！但 FLAG 的值不對。';
+
+  res.json({ correct: false, wrong: s.wrong, score, msg });
 });
 
 app.post('/level/5/hint', (req, res) => {
