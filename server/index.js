@@ -522,7 +522,7 @@ if (file.includes('../') && (file.includes('access.log') || file.includes('logs'
   const score = Math.max(0, 120 - s.wrong * 15 - (s.hintUsed ? 50 : 0));
   saveScore(req, 4, score);
   // 改用 HTML 回傳，讓玩家可以點按鈕回到遊戲
-  res.set('Content-Type', 'text/html; charset=utf-8');
+  res.set('Content-Type', 'text/html; charset=utf-8' );
   return res.send(`<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
