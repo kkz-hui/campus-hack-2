@@ -1,0 +1,204 @@
+<%- include('../partials/header', { pageTitle: 'Lv7 偽造學生證' }) %>
+
+<div class="wrap">
+
+  <div class="pg-header fi">
+    <div class="pg-lv">LV 07 / 07 &nbsp;·&nbsp; 偽造學生證</div>
+    <div class="pg-title">localStorage Manipulation</div>
+    <div class="pg-sub">
+      滿分 120 pt &nbsp;·&nbsp; 每答錯 -20 &nbsp;·&nbsp; 使用提示 -50 &nbsp;·&nbsp; 最低 0
+    </div>
+  </div>
+
+  <!-- 門禁系統 -->
+  <div class="fi" style="margin-bottom:16px">
+    <div style="border:1px solid var(--border);border-radius:4px;background:#0a0a0a">
+      <div style="background:#111;padding:10px 16px;border-bottom:1px solid var(--border);
+                  font-size:12px;color:var(--text-dim);font-family:var(--font)">
+        🪪 campus-verify.sch00l-p0rtal.xyz/card-reader
+      </div>
+      <div style="padding:32px;text-align:center">
+
+        <!-- 卡片圖示 -->
+        <div id="card-display" style="display:inline-block;padding:16px 32px;
+             border:2px solid var(--border);border-radius:8px;margin-bottom:20px;
+             transition:all .5s">
+          <div style="font-size:36px;margin-bottom:8px">🪪</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">CARD_LEVEL</div>
+          <div id="card-level-display" style="font-size:18px;font-weight:700;
+               color:var(--amber);font-family:var(--font)">student</div>
+        </div>
+
+        <!-- 門禁燈號 -->
+        <div>
+          <div id="access-light" style="width:20px;height:20px;border-radius:50%;
+               background:var(--red);box-shadow:0 0 16px var(--red);
+               margin:0 auto 12px;transition:all .5s"></div>
+          <div id="access-text" style="font-size:20px;font-weight:700;
+               letter-spacing:4px;color:var(--red);transition:all .5s">
+            ACCESS DENIED
+          </div>
+          <div id="access-sub" style="font-size:12px;color:var(--text-dim);margin-top:6px">
+            尚未通過管理員卡片驗證
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 操作區 -->
+  <div style="border:1px solid var(--border);border-radius:4px;
+              padding:16px;background:rgba(255,255,255,.02);margin-bottom:14px" class="fi">
+    <div style="font-size:13px;margin-bottom:12px">
+      修改完 localStorage 後，按「驗證卡片」：
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-s" onclick="checkCard()">[ 驗證卡片 ]</button>
+      <% if (!hintUsed) { %>
+      <button class="btn btn-a" onclick="useHint()" id="hint-btn">
+        [ 需要提示 (-50pt) ]
+      </button>
+      <% } %>
+    </div>
+
+    <div id="err-msg" style="display:none;margin-top:10px"></div>
+
+    <div id="hint-box"
+      style="display:<%= hintUsed ? 'block' : 'none' %>;margin-top:12px">
+      <div class="alert alert-b">
+        💡 提示： 某個地方的Value似乎可以竄改……
+      </div>
+    </div>
+
+    <div class="score-row" style="margin-top:10px">
+      預計得分：<span class="sc-cur" id="sc"><%= score %></span>
+      / <span class="sc-max">120</span> pt
+      <% if (wrong > 0) { %>
+      &nbsp;·&nbsp; 答錯 <%= wrong %> 次（-20/次）
+      <% } %>
+      <% if (hintUsed) { %>
+      &nbsp;·&nbsp; <span style="color:var(--red)">已使用提示（-50）</span>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- 成功動畫區 -->
+  <div id="pass-area" style="display:none;margin-bottom:14px">
+    <div class="term">
+      <div class="term-bar">
+        <span style="margin-left:8px">card-verify.sh</span>
+      </div>
+      <div class="term-body" id="card-output" style="min-height:120px"></div>
+    </div>
+    <div id="next-btn-area" style="display:none;margin-top:12px">
+      <a href="/" class="btn btn-d" style="margin-right:10px">← 返回選單</a>
+      <span style="font-size:12px;color:var(--text-dim)">（第8關建置中）</span>
+    </div>
+  </div>
+
+  <div class="pg-nav">
+    <a href="/" class="btn btn-d">← 返回選單</a>
+  </div>
+</div>
+
+<script>
+// 頁面載入時自動寫入 localStorage
+window.addEventListener('load', () => {
+  if (!localStorage.getItem('CARD_LEVEL')) {
+    localStorage.setItem('CARD_LEVEL', 'student');
+  }
+  // 更新卡片顯示
+  const level = localStorage.getItem('CARD_LEVEL') || 'student';
+  document.getElementById('card-level-display').textContent = level;
+});
+
+function useHint() {
+  fetch('/level/7/hint', { method: 'POST' })
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById('hint-btn').style.display = 'none';
+    document.getElementById('hint-box').style.display = 'block';
+    const scEl = document.getElementById('sc');
+    if (scEl) scEl.textContent = d.score;
+  });
+}
+
+function checkCard() {
+  // 前端讀取 localStorage，送給後端驗證
+  const cardLevel = localStorage.getItem('CARD_LEVEL') || 'student';
+
+  // 更新卡片顯示
+  document.getElementById('card-level-display').textContent = cardLevel;
+
+  fetch('/level/7/check', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ cardLevel }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      // 更新門禁燈號
+      document.getElementById('access-light').style.background   = 'var(--green)';
+      document.getElementById('access-light').style.boxShadow    = '0 0 20px var(--green)';
+      document.getElementById('access-text').style.color         = 'var(--green)';
+      document.getElementById('access-text').textContent         = 'ACCESS GRANTED';
+      document.getElementById('access-sub').textContent          = '管理員卡片驗證通過';
+      document.getElementById('card-display').style.borderColor  = 'var(--green)';
+
+      document.getElementById('err-msg').style.display   = 'none';
+      document.getElementById('pass-area').style.display = 'block';
+      const scEl = document.getElementById('sc');
+      if (scEl) scEl.textContent = d.score;
+      runCardAnimation(d.score);
+    } else {
+      const scEl = document.getElementById('sc');
+      if (scEl) scEl.textContent = d.score;
+      const err = document.getElementById('err-msg');
+      if (err) {
+        err.style.display = 'block';
+        err.innerHTML = `<div class="alert alert-r">
+          ✗ 驗證失敗，目前 CARD_LEVEL = <span style="color:var(--amber)">${d.cardLevel}</span><br>
+          <span style="font-size:12px">
+            請用 F12 → Application → Local Storage 把 CARD_LEVEL 的值改成 admin。
+          </span>
+          <div style="margin-top:4px;font-size:11px;color:var(--amber)">
+            ⭐ 目前預計得分：${d.score} pt（已嘗試 ${d.wrong} 次）
+          </div>
+        </div>`;
+      }
+    }
+  });
+}
+
+function runCardAnimation(score) {
+  const output = document.getElementById('card-output');
+  output.innerHTML = '';
+  const lines = [
+    { text: '$ ./card-verify.sh --level admin', class: 't-d', delay: 0 },
+    { text: '讀取 localStorage...', class: 't-d', delay: 500 },
+    { text: 'CARD_LEVEL = admin', class: 't-a', delay: 1000 },
+    { text: '──────────────────────────────', class: 't-d', delay: 1400 },
+    { text: '✓ 管理員卡片驗證通過！', class: 't-g', delay: 1800 },
+    { text: '門禁系統已解鎖', class: 't-g', delay: 2200 },
+    { text: '──────────────────────────────', class: 't-d', delay: 2600 },
+    { text: `本關得分：<span style="color:var(--amber)">${score} pt</span>`, class: 't-a', delay: 3000 },
+  ];
+  lines.forEach(line => {
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.innerHTML = line.text;
+      if (line.class) div.className = line.class;
+      div.style.animation = 'fadeIn .3s ease';
+      output.appendChild(div);
+    }, line.delay);
+  });
+  setTimeout(() => {
+    document.getElementById('next-btn-area').style.display = 'block';
+  }, 3800);
+}
+</script>
+
+<%- include('../partials/footer') %>
