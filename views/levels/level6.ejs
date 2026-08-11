@@ -44,9 +44,6 @@
   <!-- 操作區 -->
   <div style="border:1px solid var(--border);border-radius:4px;
               padding:16px;background:rgba(255,255,255,.02);margin-bottom:14px" class="fi">
-    <div style="font-size:13px;margin-bottom:12px">
-      修改完 cookie 後，按下「驗證權限」讓後端重新讀取：
-    </div>
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-s" onclick="checkCookie()">[ 驗證權限 ]</button>
@@ -81,16 +78,10 @@
   <!-- 成功動畫區 -->
   <div id="pass-area" style="display:none;margin-bottom:14px">
     <div class="term">
-      <div class="term-body" id="cookie-output" style="min-height:120px"></div>
+      <div class="term-body" id="flag-output" style="min-height:120px"></div>
     </div>
     <div id="next-btn-area" style="display:none;margin-top:12px">
-      <div class="alert alert-g">
-        🎉 恭喜！你已完成所有關卡！<br>
-        <span style="font-size:12px;color:var(--text-dim)">
-          FLAG 碎片：CAMPUS + HACK
-        </span>
-      </div>
-      <a href="/" class="btn btn-s" style="margin-top:10px">← 返回選單查看總分</a>
+      <a href="/level/7" class="btn btn-s">進入第7關 →</a>
     </div>
   </div>
 
