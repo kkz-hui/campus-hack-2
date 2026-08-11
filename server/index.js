@@ -58,6 +58,7 @@ app.post('/reset', (req, res) => {
   req.session.lv4 = null;
   req.session.lv5 = null;
   req.session.lv6 = null;
+  req.session.lv7 = null;
   res.clearCookie('role');
   req.session.loggedIn = null;
   req.session.user = null;
@@ -398,8 +399,6 @@ app.get('/level/2/success', (req, res) => {
   const score = req.session.progress.scores[2] || 0;
   res.render('levels/level2-success', { score });
 });
-
-
 
 
 // ════════════════════════════════════════════════════════════
@@ -761,6 +760,60 @@ app.post('/level/6/hint', (req, res) => {
   const s = req.session.lv6;
   res.json({ score: Math.max(0, 120 - s.wrong * 20 - 50) });
 });
+
+// ════════════════════════════════════════════════════════════
+// 第7關：偽造學生證
+//
+// 玩家流程：
+//  1. 進入頁面，JS 自動在 localStorage 寫入 CARD_LEVEL=student
+//  2. 用 F12 → Application → Local Storage 找到 CARD_LEVEL
+//  3. 直接改成 CARD_LEVEL=admin
+//  4. 按「驗證卡片」，前端讀取 localStorage 送給後端驗證
+//
+// 得分：滿分120，每答錯 -20，使用提示 -50，最低 0
+// ════════════════════════════════════════════════════════════
+
+app.get('/level/7', (req, res) => {
+  if (!req.session.progress.completed.includes(6)) {
+    return res.redirect('/level/6');
+  }
+  if (!req.session.lv7) {
+    req.session.lv7 = { wrong: 0, hintUsed: false };
+  }
+  const s = req.session.lv7;
+  res.render('levels/level7', {
+    wrong:    s.wrong,
+    hintUsed: s.hintUsed,
+    score:    Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0)),
+  });
+});
+
+app.post('/level/7/check', (req, res) => {
+  if (!req.session.lv7) req.session.lv7 = { wrong: 0, hintUsed: false };
+  const s = req.session.lv7;
+  const cardLevel = (req.body.cardLevel || '').trim().toLowerCase();
+
+  if (cardLevel === 'admin') {
+    const score = Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0));
+    saveScore(req, 7, score);
+    return res.json({ success: true, score });
+  }
+
+  s.wrong += 1;
+  const score = Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0));
+  res.json({ success: false, cardLevel, wrong: s.wrong, score });
+});
+
+app.post('/level/7/hint', (req, res) => {
+  if (!req.session.lv7) req.session.lv7 = { wrong: 0, hintUsed: false };
+  req.session.lv7.hintUsed = true;
+  const s = req.session.lv7;
+  res.json({ score: Math.max(0, 120 - s.wrong * 20 - 50) });
+});
+
+
+
+
 
 
 // ── 啟動 ────────────────────────────────────────────────────
