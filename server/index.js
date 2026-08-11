@@ -59,7 +59,9 @@ app.post('/reset', (req, res) => {
   req.session.lv5 = null;
   req.session.lv6 = null;
   req.session.lv7 = null;
+  req.session.lv8 = null;
   res.clearCookie('role');
+  res.clearCookie('PHPSESSID');
   req.session.loggedIn = null;
   req.session.user = null;
   res.redirect('/');
@@ -811,7 +813,66 @@ app.post('/level/7/hint', (req, res) => {
   res.json({ score: Math.max(0, 120 - s.wrong * 20 - 50) });
 });
 
+// ════════════════════════════════════════════════════════════
+// 第8關：Session 劫持
+//
+// 玩家流程：
+//  1. 進入教師工作站，看到 Session 已過期
+//  2. 頁面上的便利貼夾雜著 PHPSESSID=abc123
+//  3. 用 F12 → Application → Cookies 找到 PHPSESSID
+//  4. 把值改成 abc123
+//  5. 按「重新連線」驗證
+//
+// 得分：滿分120，每答錯 -20，使用提示 -40，最低 0
+// ════════════════════════════════════════════════════════════
 
+app.get('/level/8', (req, res) => {
+  if (!req.session.progress.completed.includes(7)) {
+    return res.redirect('/level/7');
+  }
+  if (!req.session.lv8) {
+    req.session.lv8 = { wrong: 0, hintUsed: false };
+  }
+
+  // 設定真實的 PHPSESSID cookie，初始值為 expired_session
+  if (!req.cookies.PHPSESSID) {
+    res.cookie('PHPSESSID', 'expired_session', {
+      httpOnly: false, // 讓 F12 可以看到並修改
+      sameSite: 'lax',
+    });
+  }
+
+  const s = req.session.lv8;
+  res.render('levels/level8', {
+    wrong:    s.wrong,
+    hintUsed: s.hintUsed,
+    score:    Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 40 : 0)),
+  });
+});
+
+app.post('/level/8/connect', (req, res) => {
+  if (!req.session.lv8) req.session.lv8 = { wrong: 0, hintUsed: false };
+  const s = req.session.lv8;
+  const phpsessid = req.cookies.PHPSESSID || '';
+
+  if (phpsessid === 'abc123') {
+    const score = Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 40 : 0));
+    saveScore(req, 8, score);
+    res.clearCookie('PHPSESSID');
+    return res.json({ success: true, score });
+  }
+
+  s.wrong += 1;
+  const score = Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 40 : 0));
+  res.json({ success: false, phpsessid, wrong: s.wrong, score });
+});
+
+app.post('/level/8/hint', (req, res) => {
+  if (!req.session.lv8) req.session.lv8 = { wrong: 0, hintUsed: false };
+  req.session.lv8.hintUsed = true;
+  const s = req.session.lv8;
+  res.json({ score: Math.max(0, 120 - s.wrong * 20 - 40) });
+});
 
 
 
