@@ -1,0 +1,259 @@
+<%- include('../partials/header', { pageTitle: 'Lv9 隱寫術' }) %>
+
+<div class="wrap">
+
+  <div class="pg-header fi">
+    <div class="pg-lv">LV 09 / 09 &nbsp;·&nbsp; 隱寫術</div>
+    <div class="pg-title">Steganography</div>
+    <div class="pg-sub">
+      滿分 100 pt &nbsp;·&nbsp; 每答錯 -15 &nbsp;·&nbsp; 使用提示 -40 &nbsp;·&nbsp; 最低 0
+    </div>
+  </div>
+
+  <!-- 任務說明 -->
+  <div class="term fi" style="margin-bottom:16px">
+    <div class="term-bar">
+      <span class="dot dot-r"></span>
+      <span class="dot dot-y"></span>
+      <span class="dot dot-g"></span>
+      <span style="margin-left:8px">mission-briefing</span>
+    </div>
+    <div class="term-body">
+      <div class="t-d">$ cat mission.txt</div>
+      <div style="margin-top:6px;color:var(--text)">
+        教師電腦桌面上有一張校慶活動照片。<br>
+        隱寫術（Steganography）可以把資料藏在圖片裡，肉眼無法察覺。<br>
+        試著用工具分析這張圖片，找出隱藏的訊息。
+      </div>
+      <div style="margin-top:8px" class="t-a">
+        ⚠ 提示：需要先下載圖片，才能進行分析。
+      </div>
+    </div>
+  </div>
+
+  <!-- 圖片區 + 下載 -->
+  <div class="fi" style="margin-bottom:16px;display:grid;
+       grid-template-columns:240px 1fr;gap:16px;align-items:start">
+
+    <!-- 左側：圖片預覽 -->
+    <div style="border:1px solid var(--border);border-radius:4px;
+                background:rgba(255,255,255,.02);padding:14px;text-align:center">
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:10px">
+        📁 ~/Desktop
+      </div>
+
+      <!-- 假圖片縮圖 -->
+      <div style="width:100%;height:160px;
+                  background:linear-gradient(135deg,#1a3a5c 0%,#0d2137 100%);
+                  border:1px solid var(--border);border-radius:4px;
+                  display:flex;flex-direction:column;
+                  align-items:center;justify-content:center;
+                  margin-bottom:12px;position:relative">
+        <div style="font-size:36px">🎉</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:6px">
+          2024 校慶紀念照
+        </div>
+        <div id="downloaded-badge" style="display:<%= downloaded ? 'block' : 'none' %>;
+             position:absolute;bottom:6px;right:8px;
+             font-size:9px;color:var(--green);font-family:var(--font)">
+          ✓ 已下載
+        </div>
+      </div>
+
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:10px">
+        school_festival.jpg<br>
+        <span style="font-size:10px">3.2 MB — JPEG</span>
+      </div>
+
+      <button id="download-btn"
+        class="btn <%= downloaded ? '' : 'btn-s' %>"
+        style="width:100%;font-size:12px"
+        onclick="downloadImg()">
+        <%= downloaded ? '✓ 已下載' : '📥 下載圖片' %>
+      </button>
+    </div>
+
+    <!-- 右側：模擬終端機 -->
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="term" style="flex:1">
+        <div class="term-bar">
+          <span class="dot dot-r"></span>
+          <span class="dot dot-y"></span>
+          <span class="dot dot-g"></span>
+          <span style="margin-left:8px">Terminal — bash — ~/Desktop</span>
+        </div>
+        <div class="term-body" id="term-output" style="min-height:200px">
+          <div class="t-d">Last login: Fri Mar 15 09:12:33</div>
+          <div class="t-d" style="margin-bottom:8px">
+            student@campus:~/Desktop$
+          </div>
+          <!-- 指令輸出記錄 -->
+          <div id="output-log"></div>
+          <!-- 輸入行 -->
+          <div style="display:flex;align-items:center">
+            <span class="t-g" style="white-space:nowrap">
+              student@campus:~/Desktop$&nbsp;
+            </span>
+            <input id="cmd-input"
+              style="background:transparent;border:none;outline:none;
+                     color:var(--green);font-family:var(--font);
+                     font-size:13px;flex:1"
+              placeholder="<%= downloaded ? '' : '（請先下載圖片）' %>"
+              onkeydown="if(event.key==='Enter') runCmd()"
+              <%= downloaded ? '' : 'disabled' %>>
+          </div>
+        </div>
+      </div>
+
+      <!-- 提示按鈕 -->
+      <div>
+        <% if (!hintUsed) { %>
+        <button class="btn btn-a" onclick="useHint()" id="hint-btn">
+          [ 需要提示 (-40pt) ]
+        </button>
+        <% } %>
+        <div id="hint-box"
+          style="display:<%= hintUsed ? 'block' : 'none' %>;margin-top:10px">
+          <div class="alert alert-b">
+            💡 提示：使用 <code style="color:var(--green)">steghide</code> 工具解析圖片。<br>
+            指令格式：
+            <code style="color:var(--green)">steghide extract -sf school_festival.jpg</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- 得分列 -->
+      <div class="score-row">
+        預計得分：<span class="sc-cur" id="sc"><%= score %></span>
+        / <span class="sc-max">100</span> pt
+        <% if (wrong > 0) { %>
+        &nbsp;·&nbsp; 答錯 <%= wrong %> 次（-15/次）
+        <% } %>
+        <% if (hintUsed) { %>
+        &nbsp;·&nbsp; <span style="color:var(--red)">已使用提示（-40）</span>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 成功動畫區 -->
+  <div id="pass-area" style="display:none;margin-bottom:14px">
+    <div class="term">
+      <div class="term-body" id="steg-output" style="min-height:140px"></div>
+    </div>
+    <div id="next-btn-area" style="display:none;margin-top:12px">
+      <a href="/" class="btn btn-d" style="margin-right:10px">← 返回選單</a>
+      <span style="font-size:12px;color:var(--text-dim)">（第10關建置中）</span>
+    </div>
+  </div>
+
+  <div class="pg-nav">
+    <a href="/" class="btn btn-d">← 返回選單</a>
+  </div>
+</div>
+
+<script>
+let downloaded = <%= downloaded ? 'true' : 'false' %>;
+
+function downloadImg() {
+  fetch('/level/9/download', { method: 'POST' })
+  .then(r => r.json())
+  .then(() => {
+    downloaded = true;
+    document.getElementById('downloaded-badge').style.display = 'block';
+    document.getElementById('download-btn').textContent = '✓ 已下載';
+    document.getElementById('download-btn').classList.remove('btn-s');
+    document.getElementById('cmd-input').disabled = false;
+    document.getElementById('cmd-input').placeholder = '';
+    document.getElementById('cmd-input').focus();
+    appendOutput('t-g', '✓ school_festival.jpg 下載完成');
+  });
+}
+
+function useHint() {
+  fetch('/level/9/hint', { method: 'POST' })
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById('hint-btn').style.display = 'none';
+    document.getElementById('hint-box').style.display = 'block';
+    const scEl = document.getElementById('sc');
+    if (scEl) scEl.textContent = d.score;
+  });
+}
+
+function appendOutput(cls, text) {
+  const log = document.getElementById('output-log');
+  const div = document.createElement('div');
+  div.innerHTML = text;
+  if (cls) div.className = cls;
+  log.appendChild(div);
+  // 捲動到最底
+  const term = document.getElementById('term-output');
+  term.scrollTop = term.scrollHeight;
+}
+
+function runCmd() {
+  const input = document.getElementById('cmd-input');
+  const cmd = input.value.trim();
+  input.value = '';
+
+  // 顯示輸入的指令
+  appendOutput('t-d', 'student@campus:~/Desktop$ ' + cmd);
+
+  fetch('/level/9/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cmd }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      appendOutput('t-g', 'Enter passphrase:');
+      setTimeout(() => appendOutput('t-g', 'wrote extracted data to "hidden_data.txt"'), 800);
+      setTimeout(() => {
+        document.getElementById('pass-area').style.display = 'block';
+        const scEl = document.getElementById('sc');
+        if (scEl) scEl.textContent = d.score;
+        runStegAnimation(d.score);
+      }, 1200);
+    } else if (d.output !== undefined) {
+      appendOutput('t-d', d.output);
+    } else if (d.error) {
+      appendOutput('t-r', d.error);
+      if (d.score !== undefined) {
+        const scEl = document.getElementById('sc');
+        if (scEl) scEl.textContent = d.score;
+      }
+    }
+  });
+}
+
+function runStegAnimation(score) {
+  const output = document.getElementById('steg-output');
+  output.innerHTML = '';
+  const lines = [
+    { text: '$ steghide extract -sf school_festival.jpg', class: 't-d', delay: 0 },
+    { text: 'Enter passphrase:', class: 't-d', delay: 500 },
+    { text: 'wrote extracted data to "hidden_data.txt"', class: 't-d', delay: 1000 },
+    { text: '$ cat hidden_data.txt', class: 't-d', delay: 1600 },
+    { text: '──────────────────────────────', class: 't-d', delay: 2000 },
+    { text: 'FLAG_PART3: <span style=\'color:var(--amber)\'>SYSTEM</span>', class: 't-a', delay: 2400 },
+    { text: '──────────────────────────────', class: 't-d', delay: 2800 },
+    { text: '本關得分：<span style=\'color:var(--amber)\'>' + score + ' pt</span>', class: 't-a', delay: 3200 },
+  ];
+  lines.forEach(line => {
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.innerHTML = line.text;
+      if (line.class) div.className = line.class;
+      div.style.animation = 'fadeIn .3s ease';
+      output.appendChild(div);
+    }, line.delay);
+  });
+  setTimeout(() => {
+    document.getElementById('next-btn-area').style.display = 'block';
+  }, 4000);
+}
+</script>
+
+<%- include('../partials/footer') %>
