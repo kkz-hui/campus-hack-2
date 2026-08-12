@@ -874,7 +874,106 @@ app.post('/level/8/hint', (req, res) => {
   res.json({ score: Math.max(0, 120 - s.wrong * 20 - 40) });
 });
 
+// ════════════════════════════════════════════════════════════
+// 第9關：隱寫術（Steganography）
+//
+// 玩家流程：
+//  1. 進入頁面看到校慶照片
+//  2. 先點下載圖片按鈕
+//  3. 在頁面的模擬終端機輸入 steghide 指令
+//  4. 解出 FLAG_PART3: SYSTEM
+//
+// 得分：滿分100，未先下載直接分析 -20，使用提示 -40，最低 0
+// ════════════════════════════════════════════════════════════
 
+app.get('/level/9', (req, res) => {
+  if (!req.session.progress.completed.includes(8)) {
+    return res.redirect('/level/8');
+  }
+  if (!req.session.lv9) {
+    req.session.lv9 = { wrong: 0, hintUsed: false, downloaded: false };
+  }
+  const s = req.session.lv9;
+  res.render('levels/level9', {
+    wrong:      s.wrong,
+    hintUsed:   s.hintUsed,
+    downloaded: s.downloaded,
+    score:      Math.max(0, 100 - s.wrong * 15 - (s.hintUsed ? 40 : 0)),
+  });
+});
+
+app.post('/level/9/download', (req, res) => {
+  if (!req.session.lv9) req.session.lv9 = { wrong: 0, hintUsed: false, downloaded: false };
+  req.session.lv9.downloaded = true;
+  res.json({ ok: true });
+});
+
+app.post('/level/9/analyze', (req, res) => {
+  if (!req.session.lv9) req.session.lv9 = { wrong: 0, hintUsed: false, downloaded: false };
+  const s = req.session.lv9;
+  const cmd = (req.body.cmd || '').trim();
+
+  // 未先下載就分析
+  if (!s.downloaded) {
+    return res.json({
+      success: false,
+      error: 'Error: 找不到 school_festival.jpg，請先下載圖片。',
+      score: Math.max(0, 100 - s.wrong * 15 - (s.hintUsed ? 40 : 0)),
+    });
+  }
+
+  // 正確的 steghide 指令
+  if (
+    cmd.includes('steghide') &&
+    cmd.includes('extract') &&
+    cmd.includes('school_festival.jpg')
+  ) {
+    const score = Math.max(0, 100 - s.wrong * 15 - (s.hintUsed ? 40 : 0));
+    saveScore(req, 9, score);
+    return res.json({ success: true, score });
+  }
+
+  // 有 steghide 但格式不對
+  if (cmd.includes('steghide')) {
+    s.wrong += 1;
+    const score = Math.max(0, 100 - s.wrong * 15 - (s.hintUsed ? 40 : 0));
+    return res.json({
+      success: false,
+      error: 'steghide: 指令格式錯誤\n用法：steghide extract -sf school_festival.jpg',
+      wrong: s.wrong,
+      score,
+    });
+  }
+
+  // 其他指令
+  if (cmd === 'ls' || cmd === 'ls -la') {
+    return res.json({
+      success: false,
+      output: 'school_festival.jpg   Documents   Downloads   Desktop',
+      score: Math.max(0, 100 - s.wrong * 15 - (s.hintUsed ? 40 : 0)),
+    });
+  }
+
+  if (cmd === '') {
+    return res.json({ success: false, output: '', score: Math.max(0, 100 - s.wrong * 15 - (s.hintUsed ? 40 : 0)) });
+  }
+
+  s.wrong += 1;
+  const score = Math.max(0, 100 - s.wrong * 15 - (s.hintUsed ? 40 : 0));
+  res.json({
+    success: false,
+    error: 'bash: ' + cmd.split(' ')[0] + ': command not found',
+    wrong: s.wrong,
+    score,
+  });
+});
+
+app.post('/level/9/hint', (req, res) => {
+  if (!req.session.lv9) req.session.lv9 = { wrong: 0, hintUsed: false, downloaded: false };
+  req.session.lv9.hintUsed = true;
+  const s = req.session.lv9;
+  res.json({ score: Math.max(0, 100 - s.wrong * 15 - 40) });
+});
 
 
 // ── 啟動 ────────────────────────────────────────────────────
