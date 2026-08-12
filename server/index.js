@@ -60,6 +60,7 @@ app.post('/reset', (req, res) => {
   req.session.lv6 = null;
   req.session.lv7 = null;
   req.session.lv8 = null;
+  req.session.lv9 = null;
   res.clearCookie('role');
   res.clearCookie('PHPSESSID');
   req.session.loggedIn = null;
