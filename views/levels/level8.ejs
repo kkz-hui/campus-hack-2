@@ -10,29 +10,6 @@
     </div>
   </div>
 
-  <!-- 任務說明 -->
-  <div class="term fi" style="margin-bottom:16px">
-    <div class="term-bar">
-      <span class="dot dot-r"></span>
-      <span class="dot dot-y"></span>
-      <span class="dot dot-g"></span>
-      <span style="margin-left:8px">mission-briefing</span>
-    </div>
-    <div class="term-body">
-      <div class="t-d">$ cat mission.txt</div>
-      <div style="margin-top:6px;color:var(--text)">
-        你找到了一台教師工作站，但 Session 已過期。<br>
-        桌上有一張便利貼，仔細看看裡面的內容。<br>
-        找到正確的 Session ID，注入到 Cookie 裡重新連線。
-      </div>
-      <div style="margin-top:8px" class="t-a">
-        ⚠ 操作方式：F12 → Application → Cookies → localhost:3000<br>
-        <span style="color:var(--text-dim);font-size:12px">
-          找到 PHPSESSID，雙擊 Value 修改成正確的 Session ID。
-        </span>
-      </div>
-    </div>
-  </div>
 
   <!-- 教師工作站畫面 -->
   <div class="fi" style="margin-bottom:16px;display:grid;
@@ -76,22 +53,19 @@
                 box-shadow:4px 4px 12px rgba(0,0,0,.5);
                 transform:rotate(-1.5deg)">
       <div style="font-weight:700;font-size:13px;margin-bottom:8px">📌 備忘</div>
-      <div>下週三 開會 14:00</div>
+      <div>下週三 12:00 第一會議室</div>
       <div>印表機 IP: 192.168.1.44</div>
-      <div>訂書針放抽屜</div>
+      <div>訂書針要沒了</div>
       <div style="color:#5a3a00">abc123</div>
       <div>wifi: CampusNet_5G</div>
-      <div>圖書館還書 3/20</div>
-      <div>找IT修投影機</div>
+      <div>吉依卡哇電影7/31上映！！！</div>
+      <div>報修投影機</div>
     </div>
   </div>
 
   <!-- 操作區 -->
   <div style="border:1px solid var(--border);border-radius:4px;
               padding:16px;background:rgba(255,255,255,.02);margin-bottom:14px" class="fi">
-    <div style="font-size:13px;margin-bottom:12px">
-      修改完 PHPSESSID 後，按「重新連線」：
-    </div>
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-s" onclick="reconnect()">[ 重新連線 ]</button>
@@ -107,13 +81,7 @@
     <div id="hint-box"
       style="display:<%= hintUsed ? 'block' : 'none' %>;margin-top:12px">
       <div class="alert alert-b">
-        💡 提示：<br>
-        1. 仔細看便利貼裡的每一行內容<br>
-        2. 找到那個像是密碼的字串<br>
-        3. F12 → Application → Cookies → localhost:3000<br>
-        4. 找到 <code style="color:var(--amber)">PHPSESSID</code><br>
-        5. 雙擊 Value，改成便利貼上找到的字串<br>
-        6. 按 Enter，回來點「重新連線」
+        💡 提示：近在眼前遠在天邊。
       </div>
     </div>
 
@@ -133,9 +101,6 @@
   <div id="pass-area" style="display:none;margin-bottom:14px">
     <div class="term">
       <div class="term-bar">
-        <span class="dot dot-r"></span>
-        <span class="dot dot-y"></span>
-        <span class="dot dot-g"></span>
         <span style="margin-left:8px">session-hijack.sh</span>
       </div>
       <div class="term-body" id="session-output" style="min-height:140px"></div>
@@ -183,11 +148,7 @@ function reconnect() {
       if (err) {
         err.style.display = 'block';
         err.innerHTML = `<div class="alert alert-r">
-          ✗ Session 驗證失敗，目前 PHPSESSID =
-          <span style="color:var(--amber)">${d.phpsessid}</span><br>
-          <span style="font-size:12px">
-            請用 F12 → Application → Cookies 修改 PHPSESSID 的值。
-          </span>
+          ✗ Session 驗證失敗。
           <div style="margin-top:4px;font-size:11px;color:var(--amber)">
             ⭐ 目前預計得分：${d.score} pt（已嘗試 ${d.wrong} 次）
           </div>
