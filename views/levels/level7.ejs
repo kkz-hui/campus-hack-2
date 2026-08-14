@@ -156,10 +156,7 @@ function checkCard() {
       if (err) {
         err.style.display = 'block';
         err.innerHTML = `<div class="alert alert-r">
-          ✗ 驗證失敗，目前 CARD_LEVEL = <span style="color:var(--amber)">${d.cardLevel}</span><br>
-          <span style="font-size:12px">
-            請用 F12 → Application → Local Storage 把 CARD_LEVEL 的值改成 admin。
-          </span>
+          ✗ 驗證失敗<br>
           <div style="margin-top:4px;font-size:11px;color:var(--amber)">
             ⭐ 目前預計得分：${d.score} pt（已嘗試 ${d.wrong} 次）
           </div>
