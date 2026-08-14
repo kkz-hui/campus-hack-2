@@ -10,27 +10,6 @@
     </div>
   </div>
 
-  <!-- 任務說明 -->
-  <div class="term fi" style="margin-bottom:16px">
-    <div class="term-bar">
-      <span class="dot dot-r"></span>
-      <span class="dot dot-y"></span>
-      <span class="dot dot-g"></span>
-      <span style="margin-left:8px">mission-briefing</span>
-    </div>
-    <div class="term-body">
-      <div class="t-d">$ cat mission.txt</div>
-      <div style="margin-top:6px;color:var(--text)">
-        教師電腦桌面上有一張校慶活動照片。<br>
-        隱寫術（Steganography）可以把資料藏在圖片裡，肉眼無法察覺。<br>
-        試著用工具分析這張圖片，找出隱藏的訊息。
-      </div>
-      <div style="margin-top:8px" class="t-a">
-        ⚠ 提示：需要先下載圖片，才能進行分析。
-      </div>
-    </div>
-  </div>
-
   <!-- 圖片區 + 下載 -->
   <div class="fi" style="margin-bottom:16px;display:grid;
        grid-template-columns:240px 1fr;gap:16px;align-items:start">
@@ -77,9 +56,6 @@
     <div style="display:flex;flex-direction:column;gap:10px">
       <div class="term" style="flex:1">
         <div class="term-bar">
-          <span class="dot dot-r"></span>
-          <span class="dot dot-y"></span>
-          <span class="dot dot-g"></span>
           <span style="margin-left:8px">Terminal — bash — ~/Desktop</span>
         </div>
         <div class="term-body" id="term-output" style="min-height:200px">
@@ -115,9 +91,7 @@
         <div id="hint-box"
           style="display:<%= hintUsed ? 'block' : 'none' %>;margin-top:10px">
           <div class="alert alert-b">
-            💡 提示：使用 <code style="color:var(--green)">steghide</code> 工具解析圖片。<br>
-            指令格式：
-            <code style="color:var(--green)">steghide extract -sf school_festival.jpg</code>
+            💡 提示：似乎有資訊隱藏在圖片哩，但要如何提取呢...
           </div>
         </div>
       </div>
