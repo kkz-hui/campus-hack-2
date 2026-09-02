@@ -976,6 +976,109 @@ app.post('/level/9/hint', (req, res) => {
   res.json({ score: Math.max(0, 100 - s.wrong * 15 - 40) });
 });
 
+// ════════════════════════════════════════════════════════════
+// 第10關：指令注入（Command Injection）
+//
+// 玩家流程：
+//  1. 進入校園監控系統的 Ping Device 頁面
+//  2. 輸入框直接把內容帶入 shell 指令（存在漏洞）
+//  3. 輸入 127.0.0.1; cat flag.txt 注入額外指令
+//  4. 取得 FLAG_PART4: BREACH
+//
+// 得分：滿分150，每次錯誤嘗試 -15，使用提示 -50，最低 0
+// ════════════════════════════════════════════════════════════
+
+app.get('/level/10', (req, res) => {
+  if (!req.session.progress.completed.includes(9)) {
+    return res.redirect('/level/9');
+  }
+  if (!req.session.lv10) {
+    req.session.lv10 = { wrong: 0, hintUsed: false };
+  }
+  const s = req.session.lv10;
+  res.render('levels/level10', {
+    wrong:    s.wrong,
+    hintUsed: s.hintUsed,
+    score:    Math.max(0, 150 - s.wrong * 15 - (s.hintUsed ? 50 : 0)),
+  });
+});
+
+app.post('/level/10/ping', (req, res) => {
+  if (!req.session.lv10) req.session.lv10 = { wrong: 0, hintUsed: false };
+  const s   = req.session.lv10;
+  const cmd = (req.body.cmd || '').trim();
+
+  // 空輸入
+  if (!cmd) {
+    return res.json({
+      success: false,
+      error: 'Error: 請輸入目標 IP 位址',
+      score: Math.max(0, 150 - s.wrong * 15 - (s.hintUsed ? 50 : 0)),
+    });
+  }
+
+  // 成功注入：含分隔符號且有 cat flag
+  const hasInjection = cmd.includes(';') || cmd.includes('&&') || cmd.includes('|');
+  const hasCatFlag   = cmd.toLowerCase().includes('cat') &&
+                       cmd.toLowerCase().includes('flag');
+
+  if (hasInjection && hasCatFlag) {
+    const score = Math.max(0, 150 - s.wrong * 15 - (s.hintUsed ? 50 : 0));
+    saveScore(req, 10, score);
+    const ipPart = cmd.split(/[;|&]/)[0].trim();
+    return res.json({
+      success: true,
+      score,
+      ip: ipPart,
+      pingOutput:
+`PING ${ipPart} (${ipPart}): 56 data bytes
+64 bytes from ${ipPart}: icmp_seq=0 ttl=64 time=0.421 ms
+64 bytes from ${ipPart}: icmp_seq=1 ttl=64 time=0.388 ms
+--- ${ipPart} ping statistics ---
+2 packets transmitted, 2 received`,
+    });
+  }
+
+  // 有注入符號但指令不對
+  if (hasInjection) {
+    s.wrong += 1;
+    const score = Math.max(0, 150 - s.wrong * 15 - (s.hintUsed ? 50 : 0));
+    const ipPart = cmd.split(/[;|&]/)[0].trim();
+    const injPart = cmd.slice(cmd.indexOf(cmd.match(/[;|&]/)[0]) + 1).trim();
+    return res.json({
+      success: false,
+      wrong: s.wrong,
+      score,
+      ip: ipPart,
+      pingOutput:
+`PING ${ipPart} (${ipPart}): 56 data bytes
+64 bytes from ${ipPart}: icmp_seq=0 ttl=64 time=1.234 ms
+--- ${ipPart} ping statistics ---
+1 packets transmitted, 1 received`,
+      injError: 'bash: ' + (injPart.split(' ')[0] || '?') + ': command not found',
+    });
+  }
+
+  // 一般 ping（無注入）
+  const ip = cmd;
+  return res.json({
+    success: false,
+    output:
+`PING ${ip} (${ip}): 56 data bytes
+64 bytes from ${ip}: icmp_seq=0 ttl=64 time=1.234 ms
+--- ${ip} ping statistics ---
+1 packets transmitted, 1 received`,
+    score: Math.max(0, 150 - s.wrong * 15 - (s.hintUsed ? 50 : 0)),
+  });
+});
+
+app.post('/level/10/hint', (req, res) => {
+  if (!req.session.lv10) req.session.lv10 = { wrong: 0, hintUsed: false };
+  req.session.lv10.hintUsed = true;
+  const s = req.session.lv10;
+  res.json({ score: Math.max(0, 150 - s.wrong * 15 - 50) });
+});
+
 
 // ── 啟動 ────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
