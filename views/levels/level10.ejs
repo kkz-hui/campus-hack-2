@@ -1,0 +1,216 @@
+<%- include('../partials/header', { pageTitle: 'Lv10 指令注入' }) %>
+
+<div class="wrap">
+
+  <div class="pg-header fi">
+    <div class="pg-lv">LV 10 / 10 &nbsp;·&nbsp; 指令注入</div>
+    <div class="pg-title">Command Injection</div>
+    <div class="pg-sub">
+      滿分 150 pt &nbsp;·&nbsp; 每次錯誤注入 -15 &nbsp;·&nbsp; 使用提示 -50 &nbsp;·&nbsp; 最低 0
+    </div>
+  </div>
+
+  <!-- 任務說明 -->
+  <div class="term fi" style="margin-bottom:16px">
+    <div class="term-bar">
+      <span style="margin-left:8px">mission-briefing</span>
+    </div>
+    <div class="term-body">
+      <div class="t-d">$ cat mission.txt</div>
+      <div style="margin-top:6px;color:var(--text)">
+        校園監控系統提供網路設備 Ping 功能。<br>
+        如果後端直接把輸入拼進 shell 指令，就存在 Command Injection 漏洞。<br>
+        試著在 IP 後面注入額外的指令，讀取 flag.txt。
+      </div>
+      <div style="margin-top:8px" class="t-a">
+        ⚠ 提示：shell 指令可以用 <span style="color:var(--green)">;</span>
+        串接多個指令。
+      </div>
+    </div>
+  </div>
+
+  <!-- 校園監控系統 -->
+  <div class="fi" style="margin-bottom:16px">
+    <div style="border:1px solid var(--border);border-radius:4px;background:#0a0a0a">
+
+      <!-- 系統標題 -->
+      <div style="background:linear-gradient(90deg,#1a237e,#283593);
+                  padding:12px 20px;border-radius:4px 4px 0 0">
+        <div style="color:#fff;font-size:14px;font-weight:700">
+          📡 校園網路監控系統
+        </div>
+        <div style="color:rgba(255,255,255,.6);font-size:11px;margin-top:2px">
+          Campus Network Monitor — Ping Device
+        </div>
+      </div>
+
+      <!-- Ping 輸入區 -->
+      <div style="padding:20px">
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px">
+          Target IP Address:
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="ping-input"
+            class="inp"
+            style="max-width:320px;flex:1"
+            placeholder="127.0.0.1"
+            onkeydown="if(event.key==='Enter') doPing()">
+          <button class="btn btn-s" onclick="doPing()">[ PING ]</button>
+        </div>
+      </div>
+
+      <!-- 輸出終端機 -->
+      <div id="ping-term" style="display:none;margin:0 20px 20px">
+        <div class="term">
+          <div class="term-bar">
+            <span style="margin-left:8px">shell output</span>
+            <span id="live-badge" style="margin-left:auto;font-size:10px;
+                  color:var(--red)">● LIVE</span>
+          </div>
+          <div class="term-body" id="ping-output" style="min-height:100px;
+               white-space:pre-line;font-size:13px;line-height:1.9"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 操作區 -->
+  <div style="border:1px solid var(--border);border-radius:4px;
+              padding:16px;background:rgba(255,255,255,.02);margin-bottom:14px" class="fi">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <% if (!hintUsed) { %>
+      <button class="btn btn-a" onclick="useHint()" id="hint-btn">
+        [ 需要提示 (-50pt) ]
+      </button>
+      <% } %>
+    </div>
+
+    <div id="hint-box"
+      style="display:<%= hintUsed ? 'block' : 'none' %>;margin-top:10px">
+      <div class="alert alert-b">
+        💡 提示：shell 中用 <code style="color:var(--green)">;</code>
+        可以在一行裡執行多個指令。<br>
+        試試看：<code style="color:var(--green)">127.0.0.1; cat flag.txt</code>
+      </div>
+    </div>
+
+    <div class="score-row" style="margin-top:10px">
+      預計得分：<span class="sc-cur" id="sc"><%= score %></span>
+      / <span class="sc-max">150</span> pt
+      <% if (wrong > 0) { %>
+      &nbsp;·&nbsp; 錯誤注入 <%= wrong %> 次（-15/次）
+      <% } %>
+      <% if (hintUsed) { %>
+      &nbsp;·&nbsp; <span style="color:var(--red)">已使用提示（-50）</span>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- 成功動畫區 -->
+  <div id="pass-area" style="display:none;margin-bottom:14px">
+    <div class="term">
+      <div class="term-bar">
+        <span style="margin-left:8px">command-injection.sh — SUCCESS</span>
+      </div>
+      <div class="term-body" id="inject-output" style="min-height:160px"></div>
+    </div>
+    <div id="next-btn-area" style="display:none;margin-top:12px">
+      <a href="/complete" class="btn btn-s">🏁 查看最終結果 →</a>
+    </div>
+  </div>
+
+  <div class="pg-nav">
+    <a href="/" class="btn btn-d">← 返回選單</a>
+  </div>
+</div>
+
+<script>
+function useHint() {
+  fetch('/level/10/hint', { method: 'POST' })
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById('hint-btn').style.display = 'none';
+    document.getElementById('hint-box').style.display = 'block';
+    const scEl = document.getElementById('sc');
+    if (scEl) scEl.textContent = d.score;
+  });
+}
+
+function doPing() {
+  const cmd = document.getElementById('ping-input').value;
+  if (!cmd.trim()) return;
+
+  fetch('/level/10/ping', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cmd }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    document.getElementById('ping-term').style.display = 'block';
+    const out = document.getElementById('ping-output');
+    const scEl = document.getElementById('sc');
+
+    if (d.success) {
+      // 成功注入
+      out.innerHTML =
+        '<span class="t-d">' + d.pingOutput + '</span>\n' +
+        '<span class="t-g">\n$ cat flag.txt</span>\n' +
+        '<span class="t-a">FLAG_PART4: BREACH</span>\n' +
+        '<span class="t-a">CAMPUS_HACK_SYSTEM_BREACH</span>';
+
+      if (scEl) scEl.textContent = d.score;
+      document.getElementById('pass-area').style.display = 'block';
+      runInjectAnimation(d.score);
+
+    } else if (d.pingOutput) {
+      // 有 ping 輸出（一般 ping 或注入但指令錯）
+      let html = '<span class="t-d">' + d.pingOutput + '</span>';
+      if (d.injError) {
+        html += '\n<span class="t-r">' + d.injError + '</span>';
+        if (scEl) scEl.textContent = d.score;
+      }
+      out.innerHTML = html;
+
+    } else if (d.output) {
+      out.innerHTML = '<span class="t-d">' + d.output + '</span>';
+
+    } else if (d.error) {
+      out.innerHTML = '<span class="t-r">' + d.error + '</span>';
+    }
+  });
+}
+
+function runInjectAnimation(score) {
+  const output = document.getElementById('inject-output');
+  output.innerHTML = '';
+  const lines = [
+    { text: '$ ping 127.0.0.1; cat flag.txt', class: 't-d', delay: 0 },
+    { text: 'PING 127.0.0.1: 56 data bytes', class: 't-d', delay: 400 },
+    { text: '64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.421 ms', class: 't-d', delay: 700 },
+    { text: '--- 127.0.0.1 ping statistics ---', class: 't-d', delay: 1000 },
+    { text: '2 packets transmitted, 2 received', class: 't-d', delay: 1200 },
+    { text: '', class: '', delay: 1500 },
+    { text: '$ cat flag.txt', class: 't-g', delay: 1800 },
+    { text: '──────────────────────────────', class: 't-d', delay: 2200 },
+    { text: 'FLAG_PART4: <span style=\'color:var(--amber)\'>BREACH</span>', class: 't-a', delay: 2600 },
+    { text: 'CAMPUS_HACK_SYSTEM_BREACH', class: 't-a', delay: 3000 },
+    { text: '──────────────────────────────', class: 't-d', delay: 3400 },
+    { text: '本關得分：<span style=\'color:var(--amber)\'>' + score + ' pt</span>', class: 't-a', delay: 3800 },
+  ];
+  lines.forEach(line => {
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.innerHTML = line.text;
+      if (line.class) div.className = line.class;
+      div.style.animation = 'fadeIn .3s ease';
+      output.appendChild(div);
+    }, line.delay);
+  });
+  setTimeout(() => {
+    document.getElementById('next-btn-area').style.display = 'block';
+  }, 4600);
+}
+</script>
+
+<%- include('../partials/footer') %>
