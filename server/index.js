@@ -1081,6 +1081,14 @@ app.post('/level/10/hint', (req, res) => {
 });
 
 
+// 完結頁
+app.get('/complete', (req, res) => {
+  if (!req.session.progress.completed.includes(10)) {
+    return res.redirect('/level/10');
+  }
+  res.render('complete');
+});
+
 // ── 啟動 ────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
