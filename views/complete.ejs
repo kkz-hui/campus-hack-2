@@ -43,18 +43,15 @@
     <div style="max-width:500px;margin:0 auto 32px;text-align:left">
       <div class="term">
         <div class="term-bar">
-          <span class="dot dot-r"></span>
-          <span class="dot dot-y"></span>
-          <span class="dot dot-g"></span>
           <span style="margin-left:8px">score-report.txt</span>
         </div>
         <div class="term-body" style="font-size:12px;line-height:2">
           <%
             const levelNames = {
-              1:'詐騙辨識', 2:'Base64 解碼', 3:'弱密碼登入',
-              4:'目錄遊走',  5:'HTML 原始碼', 6:'Cookie 存取',
-              7:'偽造學生證',8:'Session 劫持',9:'隱寫術',
-              10:'指令注入'
+              1:'詐騙辨識 → 釣魚信件偵測', 2:'Base64 解碼 → 取得學號', 3:'弱密碼登入 → 生日作為密碼',
+              4:'目錄遊走 → ../ 讀取 access.log',  5:'HTML 原始碼 → 取得 FLAG與cookie', 6:'Cookie 存取 → 鑽漏洞修改cookie',
+              7:'偽造學生證 → 修改localStorage繞過門禁',8:'Session 劫持 → 取得PHPSESSID數值',9:'隱寫術 → steghide提取圖片訊息',
+              10:'指令注入 → ping ;cat 竊取最終檔案'
             };
             const maxScores = {
               1:100,2:150,3:100,4:120,5:100,
@@ -75,33 +72,9 @@
       </div>
     </div>
 
-    <!-- 攻擊路徑摘要 -->
-    <div style="max-width:500px;margin:0 auto 32px;text-align:left">
-      <div style="font-size:11px;color:var(--text-dim);
-                  letter-spacing:2px;margin-bottom:10px">
-        ▸ 攻擊路徑摘要
-      </div>
-      <% const paths = [
-        ['Lv1',  '釣魚信件偵測 → 取得 Base64 字串'],
-        ['Lv2',  'Base64 解碼 → 取得學號 s1234567'],
-        ['Lv3',  '弱密碼（生日）登入假校務系統'],
-        ['Lv4',  '目錄遊走 ../ 讀取 access.log'],
-        ['Lv5',  'HTML Comment 取得 FLAG_PART1 + cookie 線索'],
-        ['Lv6',  'Cookie role=admin → FLAG_PART2: HACK'],
-        ['Lv7',  'localStorage CARD_LEVEL=admin 門禁繞過'],
-        ['Lv8',  'Session Hijacking PHPSESSID=abc123'],
-        ['Lv9',  'steghide 隱寫術提取 FLAG_PART3: SYSTEM'],
-        ['Lv10', 'ping ;cat flag.txt → FLAG_PART4: BREACH'],
-      ]; %>
-      <% paths.forEach(([lv, desc], i) => { %>
-      <div style="display:flex;gap:12px;font-size:11px;padding:4px 0;
-                  border-bottom:1px solid rgba(255,255,255,.04)">
-        <span class="t-g" style="min-width:36px;font-family:var(--font)"><%= lv %></span>
-        <span class="t-d"><%= desc %></span>
-      </div>
-      <% }) %>
+    <div style="font-size:20px;justify-content:center">
+      <span class="t-g">恭喜通關！</span>
     </div>
-
     <div style="display:flex;gap:12px;justify-content:center">
       <form action="/reset" method="POST">
         <button type="submit" class="btn">重新開始</button>
