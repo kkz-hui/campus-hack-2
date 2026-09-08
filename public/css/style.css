@@ -1,6 +1,5 @@
 /* ============================================================
    CAMPUS HACK — 全域樣式
-   風格：OverTheWire / Wargame 駭客訓練基地
    ============================================================ */
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap');
 
@@ -68,7 +67,6 @@ body {
 }
 .topbar-score { color: var(--amber); }
 
-/* ── 레이아웃 ── */
 .wrap { max-width: 860px; margin: 0 auto; padding: 36px 20px; }
 .wrap-wide { max-width: 1080px; margin: 0 auto; padding: 36px 20px; }
 
@@ -77,6 +75,7 @@ body {
 .pg-lv     { font-size: 11px; color: var(--text-dim); letter-spacing: 3px; margin-bottom: 4px; }
 .pg-title  { font-size: 22px; font-weight: 700; color: var(--green); letter-spacing: 1px; }
 .pg-sub    { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+.pg-title-icon { font-size: 48px; line-height: 1; }
 
 /* ── 終端機區塊 ── */
 .term {
