@@ -127,7 +127,7 @@
 <script>
 // 點擊下載按鈕時，在新分頁開啟真實的 /download 路由
 function downloadFile(key) {
-  window.open('/download?file=' + key, '_blank');
+  window.open('/download?file=' + key, '_self');
 }
 
 function useHint() {
