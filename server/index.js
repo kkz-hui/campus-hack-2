@@ -485,6 +485,7 @@ const FAKE_FILES = {
   'student-handbook.pdf':'學生手冊（PDF）',
   'scholarship.pdf':     '獎學金申請辦法（PDF）',
   'notice.txt':          '系統公告：維護時間為每週日 02:00-04:00。',
+  'flag.txt':            '[PERMISSION DENIED]',
 };
 
 const ACCESS_LOG = `[2024-03-14 23:58:01] GET /download?file=syllabus.pdf         200 OK
