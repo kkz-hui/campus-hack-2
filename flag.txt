@@ -1,2 +1,12 @@
+==============================================
+CAMPUS MONITOR SYSTEM — CONFIDENTIAL
+==============================================
+
 FLAG_PART4: BREACH
 CAMPUS_HACK_SYSTEM_BREACH
+
+[SYSTEM LOG]
+Last accessed: 2024-03-15 02:31:55
+Accessed by:   admin
+Warning:       Unauthorized access detected
+==============================================
