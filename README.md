@@ -49,10 +49,10 @@ campus-hack/
 | Lv4 | 目錄遊走 | Path Traversal | 120 pt |
 | Lv5 | HTML 原始碼 | Source Code Review | 100 pt |
 | Lv6 | Cookie 存取 | Cookie Manipulation | 120 pt |
-| Lv7 | 偽造學生證 | Cookie Manipulation | 120 pt |
-| Lv8 | Session 劫持 | Cookie Manipulation | 120 pt |
-| Lv9 | 隱寫術 | Cookie Manipulation | 100 pt |
-| Lv10 | 指令注入 | Cookie Manipulation | 150 pt |
+| Lv7 | 偽造學生證 | RFID Card Forgery | 120 pt |
+| Lv8 | Session 劫持 | Session Hijacking | 120 pt |
+| Lv9 | 隱寫術 | Steganography | 100 pt |
+| Lv10 | 指令注入 | Command Injection | 150 pt |
 
 ---
 
