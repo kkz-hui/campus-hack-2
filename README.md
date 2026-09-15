@@ -22,7 +22,12 @@ campus-hack/
 │       ├── level3.ejs    ← 第3關：弱密碼登入
 │       ├── level4.ejs    ← 第4關：目錄遊走
 │       ├── level5.ejs    ← 第5關：HTML 原始碼
-│       └── level6.ejs    ← 第6關：Cookie 存取
+│       ├── level6.ejs    ← 第6關：Cookie 存取
+│       ├── level7.ejs    ← 第7關：偽造學生證
+│       ├── level8.ejs    ← 第8關：Session 劫持
+│       ├── level9.ejs    ← 第9關：隱寫術
+│       └── level10.ejs   ← 第10關：指令注入
+
 ├── public/
 │   ├── css/
 │   │   └── style.css     ← 全域樣式
@@ -44,6 +49,10 @@ campus-hack/
 | Lv4 | 目錄遊走 | Path Traversal | 120 pt |
 | Lv5 | HTML 原始碼 | Source Code Review | 100 pt |
 | Lv6 | Cookie 存取 | Cookie Manipulation | 120 pt |
+| Lv7 | 偽造學生證 | Cookie Manipulation | 120 pt |
+| Lv8 | Session 劫持 | Cookie Manipulation | 120 pt |
+| Lv9 | 隱寫術 | Cookie Manipulation | 100 pt |
+| Lv10 | 指令注入 | Cookie Manipulation | 150 pt |
 
 ---
 
