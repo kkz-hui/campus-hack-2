@@ -109,8 +109,8 @@ window.addEventListener('load', () => {
 
 // 每2秒自動更新卡片狀態
 function pollCard() {
-  fetch('http://localhost:3001/card')
-  .then(r => r.json())
+  const BRIDGE_URL = window.NFC_BRIDGE_URL || 'http://localhost:3001';
+  fetch(BRIDGE_URL + '/card')  .then(r => r.json())
   .then(d => {
     const display = document.getElementById('card-level-display');
     const badge   = document.getElementById('card-status-badge');
