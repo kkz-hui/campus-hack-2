@@ -25,8 +25,11 @@
              transition:all .5s">
           <div style="font-size:36px;margin-bottom:8px">🪪</div>
           <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">CARD_LEVEL</div>
-          <div id="card-level-display" style="font-size:18px;font-weight:700;
-               color:var(--amber);font-family:var(--font)">student</div>
+          <div id="card-level-display" style="font-size:14px;font-weight:700;
+             color:var(--amber);font-family:var(--font);word-break:break-all">
+            — 請感應卡片 — </div>
+          <div id="card-status-badge" style="font-size:11px;color:var(--text-dim);margin-top:6px">
+            等待感應... </div>
         </div>
 
         <!-- 門禁燈號 -->
@@ -99,15 +102,47 @@
 </div>
 
 <script>
-// 頁面載入時自動寫入 localStorage
+// 頁面載入時讀取卡片狀態
 window.addEventListener('load', () => {
-  if (!localStorage.getItem('CARD_LEVEL')) {
-    localStorage.setItem('CARD_LEVEL', 'student');
-  }
-  // 更新卡片顯示
-  const level = localStorage.getItem('CARD_LEVEL') || 'student';
-  document.getElementById('card-level-display').textContent = level;
+  pollCard();
 });
+
+// 每2秒自動更新卡片狀態
+function pollCard() {
+  fetch('http://localhost:3001/card')
+  .then(r => r.json())
+  .then(d => {
+    const display = document.getElementById('card-level-display');
+    const badge   = document.getElementById('card-status-badge');
+
+    if (d.status === 'ok') {
+      const raw     = d.card.cardLevel;
+      let decoded   = '';
+      try {
+        decoded = atob(raw);
+      } catch {
+        decoded = raw;
+      }
+      display.textContent = raw + ' (' + decoded + ')';
+      if (badge) badge.textContent = '✓ 卡片已感應';
+      if (badge) badge.style.color = 'var(--green)';
+    } else if (d.status === 'no_card') {
+      display.textContent = '— 請感應卡片 —';
+      if (badge) badge.textContent = '等待感應...';
+      if (badge) badge.style.color = 'var(--text-dim)';
+    } else {
+      display.textContent = '— 讀卡機未連線 —';
+      if (badge) badge.textContent = '⚠ 讀卡機未連線';
+      if (badge) badge.style.color = 'var(--red)';
+    }
+  })
+  .catch(() => {
+    const display = document.getElementById('card-level-display');
+    display.textContent = '— 橋接程式未啟動 —';
+  });
+
+  setTimeout(pollCard, 2000);
+}
 
 function useHint() {
   fetch('/level/7/hint', { method: 'POST' })
