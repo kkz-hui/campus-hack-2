@@ -1,6 +1,6 @@
-# 驚駭世人 🏫
+# CyberHunter
 
-> *十道關卡，親手還原一場真實的校園入侵*
+> *情境式資安弱點探索與攻防平台*
 
 模擬資安訓練平台 — Node.js + Express  
 風格參考：OverTheWire / The Wargame 駭客訓練基地
