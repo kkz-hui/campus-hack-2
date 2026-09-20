@@ -778,35 +778,78 @@ app.post('/level/6/hint', (req, res) => {
 // 得分：滿分120，每答錯 -20，使用提示 -50，最低 0
 // ════════════════════════════════════════════════════════════
 
-app.get('/level/7', (req, res) => {
-  if (!req.session.progress.completed.includes(6)) {
-    return res.redirect('/level/6');
-  }
-  if (!req.session.lv7) {
-    req.session.lv7 = { wrong: 0, hintUsed: false };
-  }
-  const s = req.session.lv7;
-  res.render('levels/level7', {
-    wrong:    s.wrong,
-    hintUsed: s.hintUsed,
-    score:    Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0)),
-  });
-});
-
-app.post('/level/7/check', (req, res) => {
+app.post('/level/7/check', async (req, res) => {
   if (!req.session.lv7) req.session.lv7 = { wrong: 0, hintUsed: false };
   const s = req.session.lv7;
-  const cardLevel = (req.body.cardLevel || '').trim().toLowerCase();
 
-  if (cardLevel === 'admin') {
+  try {
+    // 向橋接程式讀取目前卡片資料
+    const http = require('http');
+    const cardData = await new Promise((resolve, reject) => {
+      http.get('http://localhost:3001/card', resp => {
+        let data = '';
+        resp.on('data', chunk => data += chunk);
+        resp.on('end', () => resolve(JSON.parse(data)));
+      }).on('error', reject);
+    });
+
+    // 橋接程式無法連線（讀卡機沒開）
+    if (!cardData || cardData.status === 'no_reader') {
+      return res.json({
+        success: false,
+        error: '讀卡機未連線，請確認 NFC 橋接程式已啟動。',
+        score: Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0)),
+      });
+    }
+
+    // 沒有卡片
+    if (cardData.status === 'no_card') {
+      return res.json({
+        success: false,
+        error: '請將卡片放到讀卡機上再按驗證。',
+        score: Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0)),
+      });
+    }
+
+    // 讀取卡片的 CARD_LEVEL（Block 2）
+    const rawCardLevel = cardData.card?.cardLevel || '';
+
+    // 嘗試 Base64 解碼
+    let decodedLevel = '';
+    try {
+      decodedLevel = Buffer.from(rawCardLevel, 'base64').toString('utf8').trim().toLowerCase();
+    } catch {
+      decodedLevel = rawCardLevel.toLowerCase();
+    }
+
+    console.log('卡片 Block 2：', rawCardLevel, '→ 解碼：', decodedLevel);
+
+    if (decodedLevel === 'admin') {
+      const score = Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0));
+      saveScore(req, 7, score);
+      return res.json({ success: true, score, cardLevel: rawCardLevel });
+    }
+
+    // 驗證失敗
+    s.wrong += 1;
     const score = Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0));
-    saveScore(req, 7, score);
-    return res.json({ success: true, score });
-  }
+    res.json({
+      success: false,
+      cardLevel: rawCardLevel,
+      decoded: decodedLevel,
+      wrong: s.wrong,
+      score,
+    });
 
-  s.wrong += 1;
-  const score = Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0));
-  res.json({ success: false, cardLevel, wrong: s.wrong, score });
+  } catch (err) {
+    // 橋接程式沒有執行
+    console.error('橋接程式連線失敗：', err.message);
+    res.json({
+      success: false,
+      error: 'NFC 橋接程式未啟動，請先執行 node nfc-bridge.js',
+      score: Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0)),
+    });
+  }
 });
 
 app.post('/level/7/hint', (req, res) => {
