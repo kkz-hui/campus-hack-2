@@ -779,12 +779,18 @@ app.post('/level/6/hint', (req, res) => {
 // ════════════════════════════════════════════════════════════
 
 app.get('/level/7', (req, res) => {
-  ...
+  if (!req.session.progress.completed.includes(6)) {
+    return res.redirect('/level/6');
+  }
+  if (!req.session.lv7) {
+    req.session.lv7 = { wrong: 0, hintUsed: false };
+  }
+  const s = req.session.lv7;
   res.render('levels/level7', {
-    wrong:       s.wrong,
-    hintUsed:    s.hintUsed,
-    score:       Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0)),
-    bridgeUrl:   process.env.NFC_BRIDGE_URL || 'http://localhost:3001',
+    wrong:     s.wrong,
+    hintUsed:  s.hintUsed,
+    score:     Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0)),
+    bridgeUrl: process.env.NFC_BRIDGE_URL || 'http://localhost:3001',
   });
 });
 
