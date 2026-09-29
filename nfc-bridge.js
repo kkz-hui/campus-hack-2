@@ -4,7 +4,7 @@
 // 執行方式：node nfc-bridge.js
 // ============================================================
 
-const { NFC } = require('nfc-pcsc');
+const { NFC, KEY_TYPE_A } = require('nfc-pcsc');
 const express  = require('express');
 const cors     = require('cors');
 
@@ -14,50 +14,71 @@ const nfc = new NFC();
 app.use(cors());
 app.use(express.json());
 
+// 白卡出廠預設金鑰
+const DEFAULT_KEY = 'FFFFFFFFFFFF';
+
+// 資料所在區塊（要與 nfc-write.js 一致）
+// Block 3、7、11 是金鑰區，不能讀寫資料
+const BLOCK_MAP = {
+  studentId: 4,
+  name:      5,
+  cardLevel: 6,
+  birthday:  8,
+};
+
 // 目前讀到的卡片資料
 let currentCard = null;
 let readerReady = false;
+
+// 每 4 個區塊為一個磁區，回傳該區塊所屬磁區的第一個區塊
+function sectorFirstBlock(block) {
+  return Math.floor(block / 4) * 4;
+}
 
 // ── NFC 讀卡機監聽 ──────────────────────────────────────────
 nfc.on('reader', reader => {
   console.log(`\n✓ 讀卡機連線：${reader.name}`);
   readerReady = true;
 
+  // 讀的是自訂資料而非 NDEF，關掉自動處理
+  reader.autoProcessing = false;
+
   // 卡片放上感應區
   reader.on('card', async card => {
     console.log(`\n📡 偵測到卡片：${card.uid}`);
     try {
-      // 讀取 Block 0~7（MIFARE Classic 1K 的前兩個 Sector）
-      // 每個 Block 16 bytes
-      const blocks = [];
+      const values = {};
+      const raw = [];
+      let lastAuthedSector = -1;
 
-      for (let block = 0; block <= 7; block++) {
-        try {
-          const data = await reader.read(block, 16, 16);
-          // 把 buffer 轉成可讀字串（去掉尾部空白）
-          const str = data.toString('utf8').replace(/\0/g, '').trim();
-          blocks.push({ block, raw: data.toString('hex'), str });
-        } catch (e) {
-          // Sector trailer（認證 block）跳過
-          blocks.push({ block, raw: '', str: '[sector trailer]' });
+      for (const [field, block] of Object.entries(BLOCK_MAP)) {
+        // 進入新磁區時才需要重新驗證
+        const sector = sectorFirstBlock(block);
+        if (sector !== lastAuthedSector) {
+          await reader.authenticate(block, KEY_TYPE_A, DEFAULT_KEY);
+          lastAuthedSector = sector;
         }
+
+        const data = await reader.read(block, 16, 16);
+        const str = data.toString('utf8').replace(/\0/g, '').trim();
+        values[field] = str;
+        raw.push({ block, field, raw: data.toString('hex'), str });
       }
 
-      // 解析卡片資料
       currentCard = {
         uid:       card.uid,
-        studentId: blocks[0]?.str || '',
-        name:      blocks[1]?.str || '',
-        cardLevel: blocks[2]?.str || '',
-        birthday:  blocks[3]?.str || '',
-        raw:       blocks,
+        studentId: values.studentId,
+        name:      values.name,
+        cardLevel: values.cardLevel,
+        birthday:  values.birthday,
+        raw,
         readAt:    new Date().toISOString(),
       };
 
       console.log('卡片資料：', currentCard);
 
     } catch (err) {
-      console.error('讀取失敗：', err);
+      console.error('讀取失敗：', err.message || err);
       currentCard = { error: '讀取失敗，請重新感應', uid: card.uid };
     }
   });
@@ -70,6 +91,12 @@ nfc.on('reader', reader => {
 
   reader.on('error', err => {
     console.error('讀卡機錯誤：', err);
+  });
+
+  reader.on('end', () => {
+    console.log(`\n讀卡機已移除：${reader.name}`);
+    readerReady = false;
+    currentCard = null;
   });
 });
 
