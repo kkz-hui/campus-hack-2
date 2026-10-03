@@ -777,6 +777,10 @@ app.post('/level/6/hint', (req, res) => {
 //
 // 得分：滿分120，每答錯 -20，使用提示 -50，最低 0
 // ════════════════════════════════════════════════════════════
+// 計算本關目前得分
+function lv7Score(s) {
+  return Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0));
+}
 
 app.get('/level/7', (req, res) => {
   if (!req.session.progress.completed.includes(6)) {
@@ -789,8 +793,8 @@ app.get('/level/7', (req, res) => {
   res.render('levels/level7', {
     wrong:     s.wrong,
     hintUsed:  s.hintUsed,
-    score:     Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0)),
-    bridgeUrl: process.env.NFC_BRIDGE_URL || 'http://localhost:3001',
+    score:     lv7Score(s),
+    bridgeUrl: (process.env.NFC_BRIDGE_URL || 'http://localhost:3001').replace(/\/+$/, ''),
   });
 });
 
@@ -799,22 +803,21 @@ app.post('/level/7/check', async (req, res) => {
   const s = req.session.lv7;
 
   try {
-    // 向橋接程式讀取目前卡片資料
-    const http = require('http');
-    const cardData = await new Promise((resolve, reject) => {
-      http.get('http://localhost:3001/card', resp => {
-        let data = '';
-        resp.on('data', chunk => data += chunk);
-        resp.on('end', () => resolve(JSON.parse(data)));
-      }).on('error', reject);
+    // 向橋接程式（經由 ngrok）讀取目前卡片資料
+    const bridgeUrl = (process.env.NFC_BRIDGE_URL || 'http://localhost:3001').replace(/\/+$/, '');
+    const resp = await fetch(bridgeUrl + '/card', {
+      headers: { 'ngrok-skip-browser-warning': '1' },
+      signal: AbortSignal.timeout(5000),   // 5 秒連不上就視為失敗
     });
+    const cardData = await resp.json();
 
     // 橋接程式無法連線（讀卡機沒開）
     if (!cardData || cardData.status === 'no_reader') {
       return res.json({
         success: false,
         error: '讀卡機未連線，請確認 NFC 橋接程式已啟動。',
-        score: Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0)),
+        wrong: s.wrong,
+        score: lv7Score(s),
       });
     }
 
@@ -823,11 +826,22 @@ app.post('/level/7/check', async (req, res) => {
       return res.json({
         success: false,
         error: '請將卡片放到讀卡機上再按驗證。',
-        score: Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0)),
+        wrong: s.wrong,
+        score: lv7Score(s),
       });
     }
 
-    // 讀取卡片的 CARD_LEVEL（Block 2）
+    // 讀取失敗
+    if (cardData.status !== 'ok') {
+      return res.json({
+        success: false,
+        error: cardData.message || '卡片讀取失敗，請重新感應。',
+        wrong: s.wrong,
+        score: lv7Score(s),
+      });
+    }
+
+    // 讀取卡片的 CARD_LEVEL（Block 6）
     const rawCardLevel = cardData.card?.cardLevel || '';
 
     // 嘗試 Base64 解碼
@@ -838,32 +852,32 @@ app.post('/level/7/check', async (req, res) => {
       decodedLevel = rawCardLevel.toLowerCase();
     }
 
-    console.log('卡片 Block 2：', rawCardLevel, '→ 解碼：', decodedLevel);
+    console.log('卡片 CARD_LEVEL：', rawCardLevel, '→ 解碼：', decodedLevel);
 
     if (decodedLevel === 'admin') {
-      const score = Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0));
+      const score = lv7Score(s);
       saveScore(req, 7, score);
       return res.json({ success: true, score, cardLevel: rawCardLevel });
     }
 
     // 驗證失敗
     s.wrong += 1;
-    const score = Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0));
     res.json({
       success: false,
       cardLevel: rawCardLevel,
       decoded: decodedLevel,
       wrong: s.wrong,
-      score,
+      score: lv7Score(s),
     });
 
   } catch (err) {
-    // 橋接程式沒有執行
+    // 橋接程式或 ngrok 沒有執行
     console.error('橋接程式連線失敗：', err.message);
     res.json({
       success: false,
-      error: 'NFC 橋接程式未啟動，請先執行 node nfc-bridge.js',
-      score: Math.max(0, 120 - s.wrong * 20 - (s.hintUsed ? 50 : 0)),
+      error: '無法連線到 NFC 橋接程式，請確認 nfc-bridge.js 與 ngrok 都已啟動。',
+      wrong: s.wrong,
+      score: lv7Score(s),
     });
   }
 });
@@ -872,7 +886,7 @@ app.post('/level/7/hint', (req, res) => {
   if (!req.session.lv7) req.session.lv7 = { wrong: 0, hintUsed: false };
   req.session.lv7.hintUsed = true;
   const s = req.session.lv7;
-  res.json({ score: Math.max(0, 120 - s.wrong * 20 - 50) });
+  res.json({ score: lv7Score(s) });
 });
 
 // ════════════════════════════════════════════════════════════
