@@ -38,6 +38,10 @@ function sectorFirstBlock(block) {
 
 // ── NFC 讀卡機監聽 ──────────────────────────────────────────
 nfc.on('reader', reader => {
+  if (reader.name.includes('SAM')) {
+    console.log(`略過 SAM 讀卡機：${reader.name}`);
+    return;
+  }
   console.log(`\n✓ 讀卡機連線：${reader.name}`);
   readerReady = true;
   activeReader = reader;

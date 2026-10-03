@@ -139,21 +139,25 @@ function pollCard() {
         decoded = raw;
       }
       window.lastCardLevel = decoded;
+      window.lastCardRaw   = raw; 
       display.textContent = raw + ' (' + decoded + ')';
       if (badge) badge.textContent = '✓ 卡片已感應';
       if (badge) badge.style.color = 'var(--green)';
     } else if (d.status === 'no_card') {
       window.lastCardLevel = '';
+      window.lastCardRaw = '';
       display.textContent = '— 請感應卡片 —';
       if (badge) badge.textContent = '等待感應...';
       if (badge) badge.style.color = 'var(--text-dim)';
     } else if (d.status === 'error') {
       window.lastCardLevel = '';
+      window.lastCardRaw = '';
       display.textContent = '— 讀取失敗，請重新感應 —';
       if (badge) badge.textContent = '⚠ ' + (d.message || '讀取失敗');
       if (badge) badge.style.color = 'var(--red)';
     } else {
       window.lastCardLevel = '';
+      window.lastCardRaw = '';
       display.textContent = '— 讀卡機未連線 —';
       if (badge) badge.textContent = '⚠ 讀卡機未連線';
       if (badge) badge.style.color = 'var(--red)';
@@ -161,6 +165,7 @@ function pollCard() {
   })
   .catch(() => {
     window.lastCardLevel = '';
+    window.lastCardRaw = '';
     const display = document.getElementById('card-level-display');
     display.textContent = '— 橋接程式未啟動 —';
   });
