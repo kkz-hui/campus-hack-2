@@ -29,6 +29,7 @@ const BLOCK_MAP = {
 // 目前讀到的卡片資料
 let currentCard = null;
 let readerReady = false;
+let activeReader = null;
 
 // 每 4 個區塊為一個磁區，回傳該區塊所屬磁區的第一個區塊
 function sectorFirstBlock(block) {
@@ -39,6 +40,7 @@ function sectorFirstBlock(block) {
 nfc.on('reader', reader => {
   console.log(`\n✓ 讀卡機連線：${reader.name}`);
   readerReady = true;
+  activeReader = reader;
 
   // 讀的是自訂資料而非 NDEF，關掉自動處理
   reader.autoProcessing = false;
@@ -124,6 +126,29 @@ app.get('/card', (req, res) => {
 // 取得讀卡機狀態
 app.get('/status', (req, res) => {
   res.json({ ready: readerReady });
+});
+
+// 只允許玩家改權限欄位（Block 6），其他欄位不開放
+app.post('/write', async (req, res) => {
+  if (!activeReader || !currentCard) {
+    return res.json({ success: false, message: '請先將卡片放在讀卡機上' });
+  }
+  const value = String(req.body.cardLevel || '').slice(0, 16);
+  if (!value) {
+    return res.json({ success: false, message: '內容不可為空' });
+  }
+  try {
+    await activeReader.authenticate(6, KEY_TYPE_A, DEFAULT_KEY);
+    const buf = Buffer.alloc(16, 0);
+    Buffer.from(value, 'utf8').copy(buf);
+    await activeReader.write(6, buf, 16);
+
+    currentCard.cardLevel = value;   // 立刻更新顯示
+    res.json({ success: true });
+  } catch (err) {
+    console.error('寫入失敗：', err.message || err);
+    res.json({ success: false, message: '寫入失敗，請重新感應卡片' });
+  }
 });
 
 // 啟動橋接程式

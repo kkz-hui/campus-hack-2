@@ -53,6 +53,15 @@
   <div style="border:1px solid var(--border);border-radius:4px;
               padding:16px;background:rgba(255,255,255,.02);margin-bottom:14px" class="fi">
 
+    <!-- 寫入卡片 -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+      <input id="write-input" type="text" maxlength="16"
+             placeholder="輸入要寫入卡片的 CARD_LEVEL"
+             style="background:#111;color:#ddd;border:1px solid var(--border);
+                    padding:6px 10px;font-family:var(--font);min-width:220px">
+      <button class="btn btn-a" id="write-btn" onclick="writeCard()">[ 寫入卡片 ]</button>
+    </div>
+
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="btn btn-s" onclick="checkCard()">[ 驗證卡片 ]</button>
       <% if (!hintUsed) { %>
@@ -103,6 +112,11 @@
 
 <script>
 const BRIDGE_URL = '<%= bridgeUrl %>';
+const BRIDGE_HEADERS = { 'ngrok-skip-browser-warning': '1' };
+
+// 目前卡片解碼後的權限值（由 pollCard 更新，checkCard 使用）
+window.lastCardLevel = '';
+
 // 頁面載入時讀取卡片狀態
 window.addEventListener('load', () => {
   pollCard();
@@ -110,8 +124,8 @@ window.addEventListener('load', () => {
 
 // 每2秒自動更新卡片狀態
 function pollCard() {
-  const BRIDGE_URL = window.NFC_BRIDGE_URL || 'http://localhost:3001';
-  fetch(BRIDGE_URL + '/card')  .then(r => r.json())
+  fetch(BRIDGE_URL + '/card', { headers: BRIDGE_HEADERS })
+  .then(r => r.json())
   .then(d => {
     const display = document.getElementById('card-level-display');
     const badge   = document.getElementById('card-status-badge');
@@ -124,25 +138,63 @@ function pollCard() {
       } catch {
         decoded = raw;
       }
+      window.lastCardLevel = decoded;
       display.textContent = raw + ' (' + decoded + ')';
       if (badge) badge.textContent = '✓ 卡片已感應';
       if (badge) badge.style.color = 'var(--green)';
     } else if (d.status === 'no_card') {
+      window.lastCardLevel = '';
       display.textContent = '— 請感應卡片 —';
       if (badge) badge.textContent = '等待感應...';
       if (badge) badge.style.color = 'var(--text-dim)';
+    } else if (d.status === 'error') {
+      window.lastCardLevel = '';
+      display.textContent = '— 讀取失敗，請重新感應 —';
+      if (badge) badge.textContent = '⚠ ' + (d.message || '讀取失敗');
+      if (badge) badge.style.color = 'var(--red)';
     } else {
+      window.lastCardLevel = '';
       display.textContent = '— 讀卡機未連線 —';
       if (badge) badge.textContent = '⚠ 讀卡機未連線';
       if (badge) badge.style.color = 'var(--red)';
     }
   })
   .catch(() => {
+    window.lastCardLevel = '';
     const display = document.getElementById('card-level-display');
     display.textContent = '— 橋接程式未啟動 —';
   });
 
   setTimeout(pollCard, 2000);
+}
+
+// 把輸入框的內容寫進卡片（Block 6）
+function writeCard() {
+  const input = document.getElementById('write-input');
+  const btn   = document.getElementById('write-btn');
+  const value = input.value.trim();
+
+  if (!value) {
+    alert('請先輸入要寫入的內容');
+    return;
+  }
+
+  btn.disabled = true;
+  fetch(BRIDGE_URL + '/write', {
+    method: 'POST',
+    headers: Object.assign({ 'Content-Type': 'application/json' }, BRIDGE_HEADERS),
+    body: JSON.stringify({ cardLevel: value }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    alert(d.success ? '寫入成功！' : (d.message || '寫入失敗'));
+  })
+  .catch(() => {
+    alert('無法連線到橋接程式');
+  })
+  .finally(() => {
+    btn.disabled = false;
+  });
 }
 
 function useHint() {
@@ -157,11 +209,12 @@ function useHint() {
 }
 
 function checkCard() {
-  // 前端讀取 localStorage，送給後端驗證
-  const cardLevel = localStorage.getItem('CARD_LEVEL') || 'student';
-
-  // 更新卡片顯示
-  document.getElementById('card-level-display').textContent = cardLevel;
+  // 使用讀卡機讀到的卡片內容送給後端驗證
+  const cardLevel = window.lastCardLevel || '';
+  if (!cardLevel) {
+    alert('請先將卡片放到讀卡機上');
+    return;
+  }
 
   fetch('/level/7/check', {
     method: 'POST',
@@ -199,6 +252,9 @@ function checkCard() {
         </div>`;
       }
     }
+  })
+  .catch(() => {
+    alert('驗證請求失敗，請稍後再試');
   });
 }
 
@@ -207,7 +263,7 @@ function runCardAnimation(score) {
   output.innerHTML = '';
   const lines = [
     { text: '$ ./card-verify.sh --level admin', class: 't-d', delay: 0 },
-    { text: '讀取 localStorage...', class: 't-d', delay: 500 },
+    { text: '讀取卡片資料...', class: 't-d', delay: 500 },
     { text: 'CARD_LEVEL = admin', class: 't-a', delay: 1000 },
     { text: '──────────────────────────────', class: 't-d', delay: 1400 },
     { text: '✓ 管理員卡片驗證通過！', class: 't-g', delay: 1800 },
